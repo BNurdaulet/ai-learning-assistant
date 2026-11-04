@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИИ-помощник для обучения</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h1>ИИ-помощник для обучения</h1>
+
+  <div class="material-box">
+    <strong>Материал (необязательно)</strong>
+    <div class="hint">Загрузите файл или вставьте текст. Квиз и чат будут опираться на него.</div>
+    <div class="row">
+      <input id="file" type="file" accept=".pdf,.txt,.md" style="width:auto; margin-top:0;">
+      <button id="clearMaterial" type="button">Очистить</button>
+    </div>
+    <textarea id="material" placeholder="Или вставьте сюда текст урока..." style="margin-top:8px;"></textarea>
+    <div id="materialInfo" class="hint">Материал не добавлен.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="quizPanel">Квиз</button>
+    <button class="tab" data-panel="chatPanel">Чат</button>
+  </div>
+
+  <!-- Квиз -->
+  <div id="quizPanel" class="panel">
+    <label for="topic">Тема (если добавлен материал, можно оставить пустой)</label>
+    <input id="topic" placeholder="Например: Фотосинтез">
+
+    <label for="count">Количество вопросов (1–20)</label>
+    <input id="count" type="number" min="1" max="20" value="5">
+
+    <label for="difficulty">Сложность</label>
+    <select id="difficulty">
+      <option>лёгкая</option>
+      <option selected>средняя</option>
+      <option>сложная</option>
+    </select>
+
+    <button id="btn" class="primary">Сгенерировать квиз</button>
+
+    <div id="message"></div>
+    <div id="quiz"></div>
+    <div id="score"></div>
+  </div>
+
+  <!-- Чат -->
+  <div id="chatPanel" class="panel" hidden>
+    <label for="style">Стиль помощника</label>
+    <select id="style">
+      <option value="tutor" selected>Терпеливый репетитор</option>
+      <option value="simple">Объясняй простыми словами</option>
+      <option value="strict">Строгий преподаватель</option>
+    </select>
+
+    <div id="chatLog"></div>
+
+    <div class="chat-input">
+      <textarea id="chatInput" placeholder="Напишите вопрос... (Enter — отправить, Shift+Enter — новая строка)"></textarea>
+      <button id="chatSend" class="primary" style="margin-top:0; width:auto;">Отправить</button>
+    </div>
+    <div class="row">
+      <button id="chatReset" type="button">Новый чат</button>
+    </div>
+  </div>
+
+  <!-- Порядок важен: сначала common.js, потом остальные -->
+  <script src="js/common.js"></script>
+  <script src="js/tabs.js"></script>
+  <script src="js/material.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>
