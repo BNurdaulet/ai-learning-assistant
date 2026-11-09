@@ -57,15 +57,20 @@ PROVIDERS = [("Gemini", ask_gemini), ("Groq", ask_groq)]
 
 def parse_quiz(text):
     quiz = Quiz.model_validate_json(text)
+    return clean_questions(quiz.questions) or None
+
+
+def clean_questions(questions):
+    """Убирает битые вопросы и перемешивает варианты. Возвращает список словарей."""
     result = []
-    for q in quiz.questions:
+    for q in questions:
         if len(q.options) < 2 or not (0 <= q.correct_index < len(q.options)):
             continue
         correct = q.options[q.correct_index]
         random.shuffle(q.options)
         q.correct_index = q.options.index(correct)
         result.append(q.model_dump())
-    return result or None
+    return result
 
 
 def generate_quiz(topic, count, difficulty, material):

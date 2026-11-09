@@ -12,7 +12,7 @@
 
   <div class="material-box">
     <strong>Материал (необязательно)</strong>
-    <div class="hint">Загрузите файл или вставьте текст. Квиз и чат будут опираться на него.</div>
+    <div class="hint">Загрузите файл или вставьте текст. Все вкладки будут опираться на него.</div>
     <div class="row">
       <input id="file" type="file" accept=".pdf,.txt,.md" style="width:auto; margin-top:0;">
       <button id="clearMaterial" type="button">Очистить</button>
@@ -21,16 +21,18 @@
     <div id="materialInfo" class="hint">Материал не добавлен.</div>
   </div>
 
+  <label for="topic">Тема (если добавлен материал, можно оставить пустой)</label>
+  <input id="topic" placeholder="Например: Фотосинтез">
+
   <div class="tabs">
     <button class="tab active" data-panel="quizPanel">Квиз</button>
+    <button class="tab" data-panel="flashPanel">Карточки</button>
+    <button class="tab" data-panel="studyPanel">Конспект</button>
     <button class="tab" data-panel="chatPanel">Чат</button>
   </div>
 
   <!-- Квиз -->
   <div id="quizPanel" class="panel">
-    <label for="topic">Тема (если добавлен материал, можно оставить пустой)</label>
-    <input id="topic" placeholder="Например: Фотосинтез">
-
     <label for="count">Количество вопросов (1–20)</label>
     <input id="count" type="number" min="1" max="20" value="5">
 
@@ -41,11 +43,56 @@
       <option>сложная</option>
     </select>
 
+    <label class="check">
+      <input id="assignment" type="checkbox">
+      Режим задания (ответы не показываются, пока не нажать «Показать ответы»)
+    </label>
+
     <button id="btn" class="primary">Сгенерировать квиз</button>
 
     <div id="message"></div>
     <div id="quiz"></div>
-    <div id="score"></div>
+  </div>
+
+  <!-- Карточки -->
+  <div id="flashPanel" class="panel" hidden>
+    <label for="fcCount">Количество карточек (1–30)</label>
+    <input id="fcCount" type="number" min="1" max="30" value="10">
+
+    <button id="fcBtn" class="primary">Создать карточки</button>
+    <div id="fcMessage" class="message"></div>
+
+    <div id="fcViewer" hidden>
+      <div id="fcCard" class="flashcard" role="button" tabindex="0" aria-label="Перевернуть карточку">
+        <div class="flashcard-inner">
+          <div id="fcFront" class="face front"></div>
+          <div id="fcBack" class="face back"></div>
+        </div>
+      </div>
+      <div class="hint center">Нажмите на карточку, чтобы перевернуть</div>
+      <div class="row fc-nav">
+        <button id="fcPrev" type="button">← Назад</button>
+        <span id="fcCounter"></span>
+        <button id="fcNext" type="button">Вперёд →</button>
+        <button id="fcShuffle" type="button">Перемешать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Конспект и план -->
+  <div id="studyPanel" class="panel" hidden>
+    <div class="row">
+      <button id="studySummary" class="primary half">Краткий конспект</button>
+      <button id="studyPlan" class="primary half">План изучения</button>
+    </div>
+    <div id="studyMessage" class="message"></div>
+    <div id="studyResult" class="card" hidden>
+      <div id="studyText" class="rich"></div>
+      <div class="row no-print">
+        <button id="studyCopy" type="button">Скопировать</button>
+        <span id="studyCopied" class="hint" style="margin-top:0;"></span>
+      </div>
+    </div>
   </div>
 
   <!-- Чат -->
@@ -69,6 +116,7 @@
   </div>
 
   <!-- Порядок важен: сначала common.js, потом остальные -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
@@ -77,6 +125,9 @@
   <script src="js/tabs.js"></script>
   <script src="js/material.js"></script>
   <script src="js/quiz.js"></script>
+  <script src="js/review.js"></script>
+  <script src="js/flashcards.js"></script>
+  <script src="js/study.js"></script>
   <script src="js/chat.js"></script>
 </body>
 </html>

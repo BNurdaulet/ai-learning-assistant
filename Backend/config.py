@@ -16,6 +16,11 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MAX_MATERIAL_CHARS = 15000           # сколько символов материала отправляем ИИ
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # максимальный размер файла: 10 МБ
 MAX_HISTORY = 20                     # сколько последних сообщений чата помним
+MAX_TOPIC_CHARS = 200                # длина темы для новых функций
+MAX_MISTAKES = 10                    # сколько ошибок отправляем на разбор
+MAX_FIELD_CHARS = 1000               # длина вопроса / пояснения в разборе ошибок
+MAX_OPTION_CHARS = 300               # длина одного варианта ответа
+MAX_FLASHCARDS = 30                  # максимум карточек
 
 client = genai.Client(
     api_key=GEMINI_API_KEY,
