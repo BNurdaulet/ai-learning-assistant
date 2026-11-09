@@ -178,3 +178,6 @@ $$;
 
 revoke all on function public.bump_ai_usage() from public, anon;
 grant execute on function public.bump_ai_usage() to authenticated;
+
+-- Попросить REST API Supabase сразу увидеть новые таблицы и функцию
+notify pgrst, 'reload schema';

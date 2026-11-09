@@ -63,7 +63,7 @@
   <dialog id="deleteDialog">
     <form id="deleteForm" method="dialog">
       <h3>Удалить аккаунт?</h3>
-      <p>Будут безвозвратно удалены все ваши квизы, результаты и чаты, а также сама учётная запись.
+      <p>Будут безвозвратно удалены все ваши квизы, результаты, чаты и документы, а также сама учётная запись.
         Отменить это нельзя.</p>
       <label for="deleteConfirm">Чтобы подтвердить, введите слово <strong>УДАЛИТЬ</strong></label>
       <input id="deleteConfirm" autocomplete="off">
@@ -84,6 +84,45 @@
     </div>
     <textarea id="material" placeholder="Или вставьте сюда текст урока..." style="margin-top:8px;"></textarea>
     <div id="materialInfo" class="hint">Материал не добавлен.</div>
+
+    <!-- Большие документы: хранятся в аккаунте, ИИ получает только нужные части -->
+    <div class="doc-box">
+      <strong>Большой документ (учебник, PDF до 400 страниц)</strong>
+      <div class="row">
+        <input id="docFile" type="file" accept=".pdf,.txt,.md" hidden>
+        <button id="docUploadBtn" type="button">Загрузить большой файл</button>
+        <span id="docStatus" class="hint" style="margin-top:0;" role="status"></span>
+      </div>
+
+      <div id="activeDocBox" class="active-doc" hidden>
+        <div class="row" style="margin-top:0;">
+          <span>Активный документ: <strong id="activeDocTitle"></strong></span>
+          <button id="docOff" type="button">Отключить</button>
+        </div>
+        <div class="hint">Пока документ выбран, квиз, карточки, конспект и чат работают по нему,
+          а поле «Материал» не используется.</div>
+
+        <label for="docScope">Какую часть документа использовать (квиз, карточки, конспект)</label>
+        <select id="docScope">
+          <option value="all" selected>Весь документ</option>
+          <option value="pages">Страницы…</option>
+          <option value="topic">Найти в документе тему из поля «Тема»</option>
+        </select>
+        <div id="docPages" class="row" hidden>
+          <span>с</span>
+          <input id="pageFrom" type="number" min="1" value="1" class="page-input" aria-label="С какой страницы">
+          <span>по</span>
+          <input id="pageTo" type="number" min="1" value="10" class="page-input" aria-label="По какую страницу">
+          <span id="docPagesHint" class="hint" style="margin-top:0;"></span>
+        </div>
+      </div>
+
+      <details id="docsBox" class="sessions-box">
+        <summary>Мои документы</summary>
+        <div id="docsMessage" class="hint"></div>
+        <div id="docsList"></div>
+      </details>
+    </div>
   </div>
 
   <label for="topic">Тема (если добавлен материал, можно оставить пустой)</label>
@@ -215,6 +254,7 @@
   <script src="js/auth.js"></script>
   <script src="js/tabs.js"></script>
   <script src="js/material.js"></script>
+  <script src="js/documents.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/review.js"></script>
   <script src="js/flashcards.js"></script>

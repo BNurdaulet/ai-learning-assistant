@@ -12,6 +12,11 @@ from config import SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY, SUPABASE_URL
 
 http = httpx.Client(timeout=15)  # один клиент на всё приложение (в тестах подменяется)
 
+# Коды, которые значат «таблицы или функции нет» (schema.sql не запускали)
+SCHEMA_MISSING_CODES = {"PGRST205", "PGRST202", "42P01", "42883"}
+# Таблицы и функции из supabase/documents.sql (для них своя подсказка)
+DOCUMENT_OBJECTS = {"documents", "chunks", "rpc search_chunks"}
+
 
 class DbError(Exception):
     def __init__(self, status_code, detail):
@@ -26,7 +31,18 @@ def _user_headers(token):
 def _check(response, what):
     if response.status_code < 300:
         return
-    print(f"Supabase ({what}): ошибка {response.status_code}")
+    # В лог пишем только код ошибки Supabase (например PGRST205), без текста запроса
+    try:
+        error = response.json()
+        code, message = error.get("code"), error.get("message")
+    except Exception:
+        code = message = None
+    print(f"Supabase ({what}): ошибка {response.status_code}, код {code}")
+    if code in SCHEMA_MISSING_CODES:
+        script = "documents.sql" if what in DOCUMENT_OBJECTS else "schema.sql"
+        raise DbError(503, f"База данных не настроена: выполните supabase/{script} в Supabase (SQL Editor).")
+    if code == "P0001" and message == "documents_limit":
+        raise DbError(400, "Достигнут лимит документов. Удалите ненужный документ и попробуйте снова.")
     if response.status_code == 401:
         raise DbError(401, "Сессия истекла. Войдите снова.")
     if response.status_code == 403:

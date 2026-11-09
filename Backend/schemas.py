@@ -12,7 +12,16 @@ class Quiz(BaseModel):
     questions: list[QuizQuestion]
 
 
-class QuizRequest(BaseModel):
+class DocumentScope(BaseModel):
+    """Необязательная работа по загруженному документу (вместо поля material).
+    scope: "all" — весь документ, "pages" — страницы page_from–page_to, "topic" — поиск по теме."""
+    document_id: str | None = None
+    scope: str = "all"
+    page_from: int | None = None
+    page_to: int | None = None
+
+
+class QuizRequest(DocumentScope):
     topic: str = ""
     count: int
     difficulty: str
@@ -28,6 +37,7 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     material: str = ""
     style: str = "tutor"
+    document_id: str | None = None  # если указан, ответ ищется в документе
 
 
 # --- Разбор ошибок ---
@@ -44,6 +54,7 @@ class ReviewRequest(BaseModel):
     mistakes: list[Mistake]
     topic: str = ""
     material: str = ""
+    document_id: str | None = None
 
 
 class MistakeReview(BaseModel):
@@ -68,7 +79,7 @@ class Flashcards(BaseModel):
     cards: list[Flashcard]
 
 
-class FlashcardsRequest(BaseModel):
+class FlashcardsRequest(DocumentScope):
     topic: str = ""
     material: str = ""
     count: int = 10
@@ -76,7 +87,7 @@ class FlashcardsRequest(BaseModel):
 
 # --- Конспект и план ---
 
-class StudyRequest(BaseModel):
+class StudyRequest(DocumentScope):
     kind: str  # "summary" или "plan"
     topic: str = ""
     material: str = ""

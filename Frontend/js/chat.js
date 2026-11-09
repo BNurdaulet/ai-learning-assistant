@@ -55,8 +55,9 @@ async function sendChat() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages: chatHistory,
-        material: material.value.trim(),
+        material: activeDoc ? "" : material.value.trim(),
         style: $("style").value,
+        document_id: activeDoc ? activeDoc.id : null,
       }),
     });
     if (!response.ok) {
@@ -69,6 +70,7 @@ async function sendChat() {
     } else {
       const data = await response.json();
       renderRich(botBubble, data.reply);
+      addSources(botBubble, data);
       chatHistory.push({ role: "assistant", content: data.reply });
       saveExchange(text, data.reply);
     }
@@ -82,6 +84,18 @@ async function sendChat() {
 
   chatSend.disabled = false;
   chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// Мелкая подпись под ответом: по каким страницам документа он составлен
+function addSources(bubble, data) {
+  let text = "";
+  if (data.sources && data.sources.length) text = "Источники: " + formatSources(data.sources);
+  else if (data.found === false) text = "В документе ничего не найдено по этому вопросу.";
+  if (!text) return;
+  const line = document.createElement("div");
+  line.className = "sources";
+  line.textContent = text;
+  bubble.after(line);
 }
 
 function newChat() {

@@ -17,7 +17,8 @@ async function startReview(mistakes, box, button) {
       body: JSON.stringify({
         mistakes: sent,
         topic: $("topic").value.trim(),
-        material: material.value.trim(),
+        material: activeDoc ? "" : material.value.trim(),
+        document_id: activeDoc ? activeDoc.id : null,
       }),
     });
     if (!response.ok) {

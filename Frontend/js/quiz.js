@@ -187,8 +187,13 @@ btn.addEventListener("click", async () => {
   const difficulty = $("difficulty").value;
   const materialText = material.value.trim();
 
-  if (!topic && !materialText) {
-    message.textContent = "Введите тему или добавьте материал.";
+  if (!activeDoc && !topic && !materialText) {
+    message.textContent = "Введите тему, добавьте материал или выберите документ.";
+    return;
+  }
+  const docError = docParamsError();
+  if (docError) {
+    message.textContent = docError;
     return;
   }
 
@@ -200,16 +205,16 @@ btn.addEventListener("click", async () => {
     const response = await apiFetch("/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, count, difficulty, material: materialText }),
+      body: JSON.stringify({ topic, count, difficulty, material: activeDoc ? "" : materialText, ...docParams() }),
     });
     if (!response.ok) {
       message.textContent = "Ошибка " + response.status + ": " + (await readError(response));
     } else {
       const data = await response.json();
-      message.textContent = "";
+      message.textContent = quizSourceText(data);
       renderQuiz(quizBox, data.questions, {
         assignment: $("assignment").checked,
-        meta: { topic: topic || "По материалу", difficulty },
+        meta: { topic: topic || (activeDoc ? activeDoc.title : "По материалу"), difficulty },
       });
     }
   } catch (error) {
@@ -218,3 +223,11 @@ btn.addEventListener("click", async () => {
 
   btn.disabled = false;
 });
+
+// Подпись под кнопкой: пояснение сервера и страницы, по которым составлены вопросы
+function quizSourceText(data) {
+  const parts = [];
+  if (data.note) parts.push(data.note);
+  if (data.sources && data.sources.length) parts.push("Вопросы по: " + formatSources(data.sources) + ".");
+  return parts.join(" ");
+}

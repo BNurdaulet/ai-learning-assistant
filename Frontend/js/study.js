@@ -7,26 +7,32 @@ async function requestStudy(kind) {
   const topic = $("topic").value.trim();
   const materialText = material.value.trim();
 
-  if (!topic && !materialText) {
-    studyMessage.textContent = "Введите тему или добавьте материал.";
+  if (!activeDoc && !topic && !materialText) {
+    studyMessage.textContent = "Введите тему, добавьте материал или выберите документ.";
+    return;
+  }
+  const docError = docParamsError();
+  if (docError) {
+    studyMessage.textContent = docError;
     return;
   }
 
   studyButtons.forEach((b) => (b.disabled = true));
   studyMessage.textContent = kind === "summary" ? "Пишу конспект, подождите..." : "Составляю план, подождите...";
+  if (activeDoc) studyMessage.textContent += " Большой документ обрабатывается частями, это может занять минуту.";
   $("studyCopied").textContent = "";
 
   try {
     const response = await apiFetch("/study", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, topic, material: materialText }),
+      body: JSON.stringify({ kind, topic, material: activeDoc ? "" : materialText, ...docParams() }),
     });
     if (!response.ok) {
       studyMessage.textContent = "Ошибка " + response.status + ": " + (await readError(response));
     } else {
       const data = await response.json();
-      studyMessage.textContent = "";
+      studyMessage.textContent = data.note || "";
       studySource = data.text;
       renderRich($("studyText"), data.text, false);
       $("studyResult").hidden = false;

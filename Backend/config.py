@@ -28,6 +28,18 @@ MAX_MESSAGE_CHARS = 20000            # длина одного сообщени�
 MAX_CHAT_MESSAGES = 500              # сколько сообщений загружаем из одной сессии
 DAILY_AI_LIMIT = 50                  # сколько запросов к ИИ в сутки можно одному пользователю
 
+# Большие документы (хранятся в Supabase частями, см. supabase/documents.sql)
+MAX_DOC_UPLOAD_BYTES = 20 * 1024 * 1024  # размер файла для «Загрузить большой файл»: 20 МБ
+MAX_PAGES = 400                      # страниц в одном PDF
+MAX_DOC_CHARS = 1_500_000            # символов текста в одном документе
+MAX_DOCUMENTS = 10                   # документов у одного пользователя
+MAX_TOTAL_DOC_CHARS = 3_000_000      # символов во всех документах пользователя
+CHUNK_SIZE = 1500                    # длина одной части (символов)
+CHUNK_OVERLAP = 200                  # сколько символов соседние части повторяют друг у друга
+MAX_CONTEXT_CHARS = 15000            # сколько текста документа отправляем ИИ за один запрос
+CHAT_TOP_CHUNKS = 5                  # сколько найденных частей получает чат
+MAX_MAPREDUCE_CALLS = 8              # максимум вызовов ИИ на один конспект/план/карточки по документу
+
 # Supabase (вход и хранение данных). URL и anon/publishable-ключ публичные.
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")

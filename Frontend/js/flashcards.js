@@ -61,25 +61,32 @@ fcBtn.addEventListener("click", async () => {
   const materialText = material.value.trim();
   const count = Math.max(1, Math.min(30, Number($("fcCount").value) || 10));
 
-  if (!topic && !materialText) {
-    fcMessage.textContent = "Введите тему или добавьте материал.";
+  if (!activeDoc && !topic && !materialText) {
+    fcMessage.textContent = "Введите тему, добавьте материал или выберите документ.";
+    return;
+  }
+  const docError = docParamsError();
+  if (docError) {
+    fcMessage.textContent = docError;
     return;
   }
 
   fcBtn.disabled = true;
-  fcMessage.textContent = "Создаю карточки, подождите...";
+  fcMessage.textContent = activeDoc
+    ? "Создаю карточки по документу. Большой документ обрабатывается частями, это может занять минуту..."
+    : "Создаю карточки, подождите...";
 
   try {
     const response = await apiFetch("/flashcards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, count, material: materialText }),
+      body: JSON.stringify({ topic, count, material: activeDoc ? "" : materialText, ...docParams() }),
     });
     if (!response.ok) {
       fcMessage.textContent = "Ошибка " + response.status + ": " + (await readError(response));
     } else {
       const data = await response.json();
-      fcMessage.textContent = "";
+      fcMessage.textContent = data.note || "";
       cards = data.cards;
       cardIndex = 0;
       $("fcViewer").hidden = false;
