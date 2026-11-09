@@ -15,6 +15,8 @@ STYLES = {
 def build_system(style, material):
     system = (
         "Ты ИИ-помощник для обучения. Отвечай на языке пользователя. "
+        "Для оформления используй Markdown. Формулы записывай в LaTeX: "
+        "внутри строки между $...$, а отдельные формулы между $$...$$. "
         + STYLES.get(style, STYLES["tutor"])
     )
     if material:

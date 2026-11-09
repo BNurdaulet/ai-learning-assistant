@@ -40,3 +40,33 @@ uvicorn app:app --reload
 ## Структура
 - `Backend/` — сервер и логика ИИ (app, config, schemas, providers, quiz, chat, files)
 - `Frontend/` — страница (index.html, css/, js/)
+
+
+# AI Asisstant
+
+## Team Members
+- Student 1: Bakhytzhan Nurdaulet
+- Student 2: Kalyshbek Nuray 
+
+## Problem
+Students need a simple way to prepare for quizzez
+## Target Users
+University and high school students
+## Features Implemented
+- View saved chats
+- Generate quizzez
+- Explain mistakes
+## Technologies
+- Python 3
+- Visual Studio Code
+- HTML, JS, CSS
+- SQL
+## How to Run
+https://ai-learning-assistant-wo31.onrender.com
+## Current Limitations
+Data is lost when the program closes.
+
+## Planned Improvements
+- ADD SQL
+- Add design
+- Add more features
