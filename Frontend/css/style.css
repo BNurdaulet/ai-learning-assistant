@@ -57,3 +57,19 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .chat-input { display: flex; gap: 8px; margin-top: 10px; }
 .chat-input textarea { margin-top: 0; height: 56px; }
 .chat-input button { align-self: stretch; }
+
+/* Оформление ответов помощника (Markdown и формулы) */
+.bubble.assistant { white-space: normal; }
+.bubble.assistant p { margin: 0 0 8px; }
+.bubble.assistant ul, .bubble.assistant ol { margin: 4px 0 8px; padding-left: 22px; }
+.bubble.assistant li { margin: 3px 0; }
+.bubble.assistant h1, .bubble.assistant h2, .bubble.assistant h3, .bubble.assistant h4 {
+  font-size: 1.05em; margin: 12px 0 6px; }
+.bubble.assistant pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; overflow-x: auto; }
+.bubble.assistant code { font-family: ui-monospace, monospace; font-size: 0.92em; }
+.bubble.assistant table { border-collapse: collapse; margin: 8px 0; }
+.bubble.assistant th, .bubble.assistant td { border: 1px solid var(--border); padding: 4px 8px; }
+.bubble.assistant .katex-display { overflow-x: auto; overflow-y: hidden; }
+.bubble.assistant > :last-child { margin-bottom: 0; }
+.option { white-space: normal; }

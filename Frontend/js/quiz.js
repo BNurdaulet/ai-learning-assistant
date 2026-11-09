@@ -19,7 +19,11 @@ function renderQuiz(questions) {
     card.className = "card";
 
     const title = document.createElement("h3");
-    title.textContent = (i + 1) + ". " + q.question;
+    const num = document.createElement("span");
+    num.textContent = (i + 1) + ". ";
+    const body = document.createElement("span");
+    renderRich(body, q.question, true);
+    title.append(num, body);
     card.appendChild(title);
 
     const explanation = document.createElement("div");
@@ -30,7 +34,7 @@ function renderQuiz(questions) {
     q.options.forEach((text, idx) => {
       const b = document.createElement("button");
       b.className = "option";
-      b.textContent = text;
+      renderRich(b, text, true);
       b.addEventListener("click", () => {
         buttons.forEach((x) => (x.disabled = true));
         buttons[q.correct_index].classList.add("correct");
@@ -39,7 +43,7 @@ function renderQuiz(questions) {
         } else {
           b.classList.add("wrong");
         }
-        explanation.textContent = q.explanation;
+        renderRich(explanation, q.explanation, true);
         explanation.hidden = false;
         answered++;
         if (answered === total) {

@@ -41,7 +41,7 @@ async function sendChat() {
       chatInput.value = text;
     } else {
       const data = await response.json();
-      botBubble.textContent = data.reply;
+      renderRich(botBubble, data.reply);
       history.push({ role: "assistant", content: data.reply });
     }
   } catch (error) {
