@@ -4,9 +4,49 @@ const quizBox = $("quiz");
 
 // Рисует квиз в container. Используется и для основного квиза, и для тренировки после разбора ошибок.
 // options.assignment = true: режим задания (без подсветки, ответы по кнопке «Показать ответы»).
+// options.meta = {topic, difficulty}: тема квиза (для сохранения и истории).
+// options.quizId: id сохранённого квиза (если квиз открыт из «Мои квизы»).
 function renderQuiz(container, questions, options = {}) {
   const assignment = !!options.assignment;
+  const meta = options.meta || { topic: "", difficulty: "" };
+  let quizId = options.quizId || null;
   container.innerHTML = "";
+
+  // Кнопка «Сохранить квиз»
+  const saveRow = document.createElement("div");
+  saveRow.className = "row no-print";
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  const saveStatus = document.createElement("span");
+  saveStatus.className = "hint";
+  saveStatus.style.marginTop = "0";
+  saveBtn.textContent = quizId ? "Квиз сохранён" : "Сохранить квиз";
+  saveBtn.disabled = !!quizId;
+  saveBtn.addEventListener("click", async () => {
+    saveBtn.disabled = true;
+    saveStatus.textContent = "Сохраняю...";
+    try {
+      const response = await apiJson("/quizzes", "POST", {
+        topic: meta.topic,
+        difficulty: meta.difficulty,
+        questions,
+      });
+      if (!response.ok) {
+        saveStatus.textContent = "Ошибка: " + (await readError(response));
+        saveBtn.disabled = false;
+        return;
+      }
+      quizId = (await response.json()).id;
+      saveBtn.textContent = "Квиз сохранён";
+      saveStatus.textContent = "Он появится во вкладке «Мои квизы».";
+      if (typeof loadQuizList === "function") loadQuizList();
+    } catch (error) {
+      saveStatus.textContent = "Не удалось связаться с сервером: " + error.message;
+      saveBtn.disabled = false;
+    }
+  });
+  saveRow.append(saveBtn, saveStatus);
+  container.appendChild(saveRow);
 
   const total = questions.length;
   const chosen = new Array(total).fill(null); // какой вариант выбрал пользователь
@@ -95,6 +135,7 @@ function renderQuiz(container, questions, options = {}) {
     let text = "Результат: " + correctCount + " из " + total;
     if (answered < total) text += " (без ответа: " + (total - answered) + ")";
     scoreBox.textContent = text;
+    saveResult(correctCount, mistakes);
 
     actions.innerHTML = "";
     // startReview объявлена в review.js
@@ -104,6 +145,27 @@ function renderQuiz(container, questions, options = {}) {
       reviewBtn.addEventListener("click", () => startReview(mistakes, reviewBox, reviewBtn));
       actions.appendChild(reviewBtn);
     }
+  }
+
+  // Сохраняем результат в историю (тихо: если не вышло, просто пишем об этом под счётом)
+  async function saveResult(score, mistakes) {
+    const note = document.createElement("div");
+    note.className = "hint no-print";
+    try {
+      const response = await apiJson("/results", "POST", {
+        quiz_id: quizId,
+        topic: meta.topic,
+        score,
+        total,
+        mistakes: mistakes.slice(0, 30),
+      });
+      note.textContent = response.ok
+        ? "Результат сохранён во вкладке «История»."
+        : "Результат не сохранён: " + (await readError(response));
+    } catch (error) {
+      note.textContent = "Результат не сохранён: нет связи с сервером.";
+    }
+    scoreBox.after(note);
   }
 
   if (assignment) {
@@ -135,7 +197,7 @@ btn.addEventListener("click", async () => {
   quizBox.innerHTML = "";
 
   try {
-    const response = await fetch(API_URL + "/generate", {
+    const response = await apiFetch("/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic, count, difficulty, material: materialText }),
@@ -145,7 +207,10 @@ btn.addEventListener("click", async () => {
     } else {
       const data = await response.json();
       message.textContent = "";
-      renderQuiz(quizBox, data.questions, { assignment: $("assignment").checked });
+      renderQuiz(quizBox, data.questions, {
+        assignment: $("assignment").checked,
+        meta: { topic: topic || "По материалу", difficulty },
+      });
     }
   } catch (error) {
     message.textContent = "Не удалось связаться с сервером: " + error.message;

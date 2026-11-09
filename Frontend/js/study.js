@@ -17,7 +17,7 @@ async function requestStudy(kind) {
   $("studyCopied").textContent = "";
 
   try {
-    const response = await fetch(API_URL + "/study", {
+    const response = await apiFetch("/study", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kind, topic, material: materialText }),

@@ -24,7 +24,7 @@ $("file").addEventListener("change", async (e) => {
   form.append("file", file);
 
   try {
-    const response = await fetch(API_URL + "/extract", { method: "POST", body: form });
+    const response = await apiFetch("/extract", { method: "POST", body: form });
     if (!response.ok) {
       $("materialInfo").textContent = "Ошибка: " + (await readError(response));
     } else {

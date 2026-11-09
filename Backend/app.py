@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from auth import User, ai_limit, current_user
 from chat import build_system, generate_reply
 from config import (
     MAX_FIELD_CHARS,
@@ -13,13 +15,27 @@ from config import (
     MAX_MISTAKES,
     MAX_OPTION_CHARS,
     MAX_TOPIC_CHARS,
+    SUPABASE_ANON_KEY,
+    SUPABASE_URL,
 )
 from files import FileError, extract_text
 from flashcards import generate_flashcards
 from quiz import generate_quiz
 from review import review_mistakes
-from schemas import ChatRequest, FlashcardsRequest, QuizRequest, ReviewRequest, StudyRequest
+import userdata
+from schemas import (
+    ChatRequest,
+    CreateChatRequest,
+    FlashcardsRequest,
+    QuizRequest,
+    ReviewRequest,
+    SaveQuizRequest,
+    SaveResultRequest,
+    SaveMessagesRequest,
+    StudyRequest,
+)
 from study import KINDS, generate_study
+from supabase_db import DbError
 
 app = FastAPI(title="ИИ-помощник для обучения")
 
@@ -33,13 +49,26 @@ app.add_middleware(
 BUSY_MESSAGE = "Не удалось получить ответ ни от одного сервиса ИИ. Попробуйте позже."
 
 
+@app.exception_handler(DbError)
+def db_error(request: Request, e: DbError):
+    return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+
+
 @app.get("/health")
 def status():
     return {"status": "Сервер работает"}
 
 
+@app.get("/config")
+def public_config():
+    """Публичные настройки для браузера. Секретный ключ сюда не попадает никогда."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise HTTPException(status_code=503, detail="Вход не настроен на сервере.")
+    return {"supabase_url": SUPABASE_URL, "supabase_anon_key": SUPABASE_ANON_KEY}
+
+
 @app.post("/extract")
-async def extract(file: UploadFile = File(...)):
+async def extract(file: UploadFile = File(...), user: User = Depends(current_user)):
     data = await file.read()
     try:
         text, truncated, total = extract_text(file.filename, data)
@@ -49,7 +78,7 @@ async def extract(file: UploadFile = File(...)):
 
 
 @app.post("/generate")
-def generate(data: QuizRequest):
+def generate(data: QuizRequest, user: User = Depends(ai_limit)):
     topic = data.topic.strip()
     material = data.material.strip()[:MAX_MATERIAL_CHARS]
     if not topic and not material:
@@ -63,7 +92,7 @@ def generate(data: QuizRequest):
 
 
 @app.post("/chat")
-def chat(data: ChatRequest):
+def chat(data: ChatRequest, user: User = Depends(ai_limit)):
     messages = [
         m for m in data.messages
         if m.role in ("user", "assistant") and m.content.strip()
@@ -94,7 +123,7 @@ def clean_source(topic, material, required=True):
 
 
 @app.post("/review")
-def review(data: ReviewRequest):
+def review(data: ReviewRequest, user: User = Depends(ai_limit)):
     mistakes = []
     for m in data.mistakes:
         question = m.question.strip()[:MAX_FIELD_CHARS]
@@ -119,7 +148,7 @@ def review(data: ReviewRequest):
 
 
 @app.post("/flashcards")
-def flashcards(data: FlashcardsRequest):
+def flashcards(data: FlashcardsRequest, user: User = Depends(ai_limit)):
     topic, material = clean_source(data.topic, data.material)
     count = max(1, min(data.count, MAX_FLASHCARDS))
     cards = generate_flashcards(topic, count, material)
@@ -129,7 +158,7 @@ def flashcards(data: FlashcardsRequest):
 
 
 @app.post("/study")
-def study(data: StudyRequest):
+def study(data: StudyRequest, user: User = Depends(ai_limit)):
     if data.kind not in KINDS:
         raise HTTPException(status_code=400, detail="Неизвестный тип: нужен «summary» или «plan».")
     topic, material = clean_source(data.topic, data.material)
@@ -137,6 +166,74 @@ def study(data: StudyRequest):
     if text is None:
         raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
     return {"text": text}
+
+
+# ---------- Данные пользователя: квизы ----------
+
+@app.post("/quizzes")
+def save_quiz(data: SaveQuizRequest, user: User = Depends(current_user)):
+    return userdata.save_quiz(user, data)
+
+
+@app.get("/quizzes")
+def list_quizzes(user: User = Depends(current_user)):
+    return {"quizzes": userdata.list_quizzes(user)}
+
+
+@app.get("/quizzes/{quiz_id}")
+def get_quiz(quiz_id: str, user: User = Depends(current_user)):
+    return userdata.get_quiz(user, quiz_id)
+
+
+@app.delete("/quizzes/{quiz_id}")
+def delete_quiz(quiz_id: str, user: User = Depends(current_user)):
+    return userdata.delete_quiz(user, quiz_id)
+
+
+# ---------- Данные пользователя: результаты ----------
+
+@app.post("/results")
+def save_result(data: SaveResultRequest, user: User = Depends(current_user)):
+    return userdata.save_result(user, data)
+
+
+@app.get("/history")
+def history(user: User = Depends(current_user)):
+    return {"results": userdata.list_history(user)}
+
+
+# ---------- Данные пользователя: чаты ----------
+
+@app.post("/chats")
+def create_chat(data: CreateChatRequest, user: User = Depends(current_user)):
+    return userdata.create_chat(user, data)
+
+
+@app.get("/chats")
+def list_chats(user: User = Depends(current_user)):
+    return {"chats": userdata.list_chats(user)}
+
+
+@app.get("/chats/{session_id}")
+def get_chat(session_id: str, user: User = Depends(current_user)):
+    return userdata.get_chat(user, session_id)
+
+
+@app.post("/chats/{session_id}/messages")
+def save_messages(session_id: str, data: SaveMessagesRequest, user: User = Depends(current_user)):
+    return userdata.save_messages(user, session_id, data)
+
+
+@app.delete("/chats/{session_id}")
+def delete_chat(session_id: str, user: User = Depends(current_user)):
+    return userdata.delete_chat(user, session_id)
+
+
+# ---------- Удаление аккаунта ----------
+
+@app.delete("/account")
+def delete_account(user: User = Depends(current_user)):
+    return userdata.delete_account(user)
 
 
 # Страницу из папки Frontend отдаёт тот же сервер. Эта строка должна быть в самом конце.

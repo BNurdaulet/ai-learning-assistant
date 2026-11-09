@@ -1,7 +1,9 @@
 const chatLog = $("chatLog");
 const chatInput = $("chatInput");
 const chatSend = $("chatSend");
-let history = [];
+// Не называем переменную history: это имя занято встроенным window.history
+let chatHistory = [];
+let currentSessionId = null; // id сохранённого чата (создаётся при первом сообщении)
 
 function addBubble(role, text) {
   const div = document.createElement("div");
@@ -12,29 +14,54 @@ function addBubble(role, text) {
   return div;
 }
 
+// Сохраняет пару «вопрос — ответ» в базу. Ошибка сохранения не мешает чату.
+async function saveExchange(question, reply) {
+  const note = $("chatSaveNote");
+  try {
+    if (!currentSessionId) {
+      const response = await apiJson("/chats", "POST", { title: question.slice(0, 80), style: $("style").value });
+      if (!response.ok) throw new Error(await readError(response));
+      const session = await response.json();
+      currentSessionId = session.id;
+      $("chatTitle").textContent = session.title;
+    }
+    const response = await apiJson("/chats/" + encodeURIComponent(currentSessionId) + "/messages", "POST", {
+      messages: [
+        { role: "user", content: question },
+        { role: "assistant", content: reply },
+      ],
+    });
+    if (!response.ok) throw new Error(await readError(response));
+    note.textContent = "";
+    if ($("chatSessionsBox").open) loadChatSessions();
+  } catch (error) {
+    note.textContent = "Чат не сохранён: " + error.message;
+  }
+}
+
 async function sendChat() {
   const text = chatInput.value.trim();
   if (!text) return;
 
   chatInput.value = "";
-  history.push({ role: "user", content: text });
+  chatHistory.push({ role: "user", content: text });
   const userBubble = addBubble("user", text);
   const botBubble = addBubble("assistant", "Думаю...");
   chatSend.disabled = true;
 
   try {
-    const response = await fetch(API_URL + "/chat", {
+    const response = await apiFetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: history,
+        messages: chatHistory,
         material: material.value.trim(),
         style: $("style").value,
       }),
     });
     if (!response.ok) {
       // Убираем неотправленный вопрос и возвращаем его в поле ввода
-      history.pop();
+      chatHistory.pop();
       userBubble.remove();
       botBubble.textContent = "Ошибка " + response.status + ": " + (await readError(response));
       botBubble.classList.add("error");
@@ -42,10 +69,11 @@ async function sendChat() {
     } else {
       const data = await response.json();
       renderRich(botBubble, data.reply);
-      history.push({ role: "assistant", content: data.reply });
+      chatHistory.push({ role: "assistant", content: data.reply });
+      saveExchange(text, data.reply);
     }
   } catch (error) {
-    history.pop();
+    chatHistory.pop();
     userBubble.remove();
     botBubble.textContent = "Не удалось связаться с сервером: " + error.message;
     botBubble.classList.add("error");
@@ -56,6 +84,84 @@ async function sendChat() {
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
+function newChat() {
+  chatHistory = [];
+  currentSessionId = null;
+  chatLog.innerHTML = "";
+  $("chatTitle").textContent = "Новый чат";
+  $("chatSaveNote").textContent = "";
+}
+
+async function loadChatSessions() {
+  const box = $("chatSessions");
+  const msg = $("chatSessionsMessage");
+  msg.textContent = "Загружаю...";
+  try {
+    const response = await apiFetch("/chats");
+    if (!response.ok) {
+      msg.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      return;
+    }
+    const data = await response.json();
+    box.innerHTML = "";
+    msg.textContent = data.chats.length ? "" : "Сохранённых чатов пока нет.";
+    data.chats.forEach((c) => {
+      const item = listItem(c.title, formatDate(c.created_at), [
+        ["Открыть", (b) => openChat(c.id, b)],
+        ["Удалить", (b) => deleteChat(c.id, c.title, b), "danger"],
+      ]);
+      if (c.id === currentSessionId) item.classList.add("active");
+      box.appendChild(item);
+    });
+  } catch (error) {
+    msg.textContent = "Не удалось связаться с сервером: " + error.message;
+  }
+}
+
+async function openChat(id, button) {
+  button.disabled = true;
+  try {
+    const response = await apiFetch("/chats/" + encodeURIComponent(id));
+    if (!response.ok) {
+      $("chatSessionsMessage").textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      return;
+    }
+    const session = await response.json();
+    newChat();
+    currentSessionId = session.id;
+    $("chatTitle").textContent = session.title;
+    $("style").value = session.style;
+    session.messages.forEach((m) => {
+      const bubble = addBubble(m.role, m.content);
+      if (m.role === "assistant") renderRich(bubble, m.content);
+      chatHistory.push({ role: m.role, content: m.content });
+    });
+    loadChatSessions();
+  } catch (error) {
+    $("chatSessionsMessage").textContent = "Не удалось связаться с сервером: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function deleteChat(id, title, button) {
+  if (!confirm("Удалить чат «" + title + "»?")) return;
+  button.disabled = true;
+  try {
+    const response = await apiJson("/chats/" + encodeURIComponent(id), "DELETE");
+    if (!response.ok) {
+      $("chatSessionsMessage").textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      button.disabled = false;
+      return;
+    }
+    if (id === currentSessionId) newChat();
+    loadChatSessions();
+  } catch (error) {
+    $("chatSessionsMessage").textContent = "Не удалось связаться с сервером: " + error.message;
+    button.disabled = false;
+  }
+}
+
 chatSend.addEventListener("click", sendChat);
 chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -64,7 +170,7 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 
-$("chatReset").addEventListener("click", () => {
-  history = [];
-  chatLog.innerHTML = "";
+$("chatReset").addEventListener("click", newChat);
+$("chatSessionsBox").addEventListener("toggle", () => {
+  if ($("chatSessionsBox").open) loadChatSessions();
 });

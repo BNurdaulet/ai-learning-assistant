@@ -6,3 +6,4 @@ httpx
 pypdf
 python-multipart
 python-dotenv
+PyJWT[crypto]

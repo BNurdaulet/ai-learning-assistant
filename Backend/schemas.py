@@ -80,3 +80,28 @@ class StudyRequest(BaseModel):
     kind: str  # "summary" или "plan"
     topic: str = ""
     material: str = ""
+
+
+# --- Данные пользователя (Supabase) ---
+
+class SaveQuizRequest(BaseModel):
+    topic: str = ""
+    difficulty: str = ""
+    questions: list[QuizQuestion]
+
+
+class SaveResultRequest(BaseModel):
+    quiz_id: str | None = None   # если квиз сохранён
+    topic: str = ""
+    score: int
+    total: int
+    mistakes: list[Mistake] = []
+
+
+class CreateChatRequest(BaseModel):
+    title: str = ""
+    style: str = "tutor"
+
+
+class SaveMessagesRequest(BaseModel):
+    messages: list[ChatMessage]

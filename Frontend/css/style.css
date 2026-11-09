@@ -117,6 +117,40 @@ button:disabled { opacity: 0.6; cursor: wait; }
 /* Конспект */
 .primary.half { flex: 1; margin-top: 12px; width: auto; }
 
+/* Вход и пользователь */
+.auth-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.auth-box .tabs { margin-top: 0; }
+.auth-box .check { margin-top: 14px; align-items: flex-start; }
+.auth-box .check input { margin-top: 3px; }
+a { color: var(--accent); }
+.link-btn { background: none; border: none; padding: 4px 0; color: var(--accent); text-decoration: underline; }
+.userbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 12px;
+           font-size: 14px; flex-wrap: wrap; }
+.userbar span { opacity: 0.8; overflow-wrap: anywhere; }
+.userbar button { padding: 6px 12px; font-size: 14px; }
+
+/* Списки (мои квизы, история, чаты) */
+.list-item { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+             background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+             padding: 10px 12px; margin-top: 10px; }
+.list-text { min-width: 0; flex: 1 1 200px; }
+.list-title { font-weight: 600; overflow-wrap: anywhere; }
+.list-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.list-actions button { padding: 6px 12px; font-size: 14px; }
+button.danger { color: var(--bad); border-color: var(--bad); }
+.list-item.active { border-color: var(--accent); }
+.history-details { flex-basis: 100%; }
+.sessions-box { margin-top: 14px; }
+.sessions-box summary { cursor: pointer; font-weight: 600; }
+#chatSessions { max-height: 260px; overflow-y: auto; }
+#chatTitle { font-weight: 600; overflow-wrap: anywhere; }
+
+/* Окно удаления аккаунта */
+dialog { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px;
+         max-width: min(460px, calc(100vw - 32px)); padding: 18px; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+dialog h3 { margin-top: 0; }
+
 /* Печать (режим задания): только вопросы, без кнопок, полей и чата */
 @media print {
   :root {
@@ -124,7 +158,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
     --ok: #1f9d55; --ok-bg: #e3f6ea; --bad: #d64545; --bad-bg: #fbe6e6;
   }
   body { margin: 0; max-width: none; }
-  .material-box, label[for="topic"], #topic, .tabs, #chatPanel, .no-print, .message, #message,
+  .material-box, label[for="topic"], #topic, .tabs, #chatPanel, #authScreen, #libraryPanel, #historyPanel, .no-print, .message, #message,
   .panel > label, .panel > input, .panel > select, .panel > .primary, .panel > .row,
   .fc-nav, #fcViewer > .hint {
     display: none !important;
@@ -134,3 +168,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
   .option { border-color: var(--border); box-shadow: none;
             -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Страница политики конфиденциальности */
+.privacy { line-height: 1.6; }
+.privacy h2 { font-size: 1.2em; margin-top: 24px; }
+.privacy ul { padding-left: 22px; }

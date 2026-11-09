@@ -10,6 +10,71 @@
 <body>
   <h1>ИИ-помощник для обучения</h1>
 
+  <!-- Экран входа (виден, пока пользователь не вошёл) -->
+  <div id="authScreen" class="auth-box" hidden>
+    <div class="tabs">
+      <button id="authModeLogin" class="tab auth-mode active" type="button">Вход</button>
+      <button id="authModeRegister" class="tab auth-mode" type="button">Регистрация</button>
+    </div>
+
+    <form id="authForm" novalidate>
+      <label for="authEmail">Email</label>
+      <input id="authEmail" type="email" autocomplete="email" maxlength="254" required>
+
+      <label for="authPassword">Пароль</label>
+      <input id="authPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" required>
+
+      <div id="registerOnly" hidden>
+        <label for="authPassword2">Повторите пароль</label>
+        <input id="authPassword2" type="password" autocomplete="new-password" maxlength="72">
+        <label class="check">
+          <input id="authConsent" type="checkbox">
+          <span>Я прочитал(а) <a href="privacy.html" target="_blank" rel="noopener">политику конфиденциальности</a>
+            и согласен(на) с обработкой данных</span>
+        </label>
+      </div>
+
+      <button id="authSubmit" class="primary" type="submit">Войти</button>
+    </form>
+    <div class="row">
+      <button id="authForgot" type="button" class="link-btn">Забыли пароль?</button>
+    </div>
+
+    <!-- Новый пароль (после перехода по ссылке из письма) -->
+    <form id="resetForm" hidden novalidate>
+      <label for="resetPassword">Новый пароль (минимум 8 символов)</label>
+      <input id="resetPassword" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+      <button class="primary" type="submit">Сохранить пароль</button>
+    </form>
+
+    <div id="authMessage" class="message" role="status"></div>
+    <div class="hint"><a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></div>
+  </div>
+
+  <!-- Приложение (видно только после входа) -->
+  <div id="app" hidden>
+  <div class="userbar no-print">
+    <span id="userEmail"></span>
+    <button id="logoutBtn" type="button">Выйти</button>
+    <button id="deleteAccountBtn" type="button" class="danger">Удалить аккаунт и все данные</button>
+  </div>
+
+  <!-- Подтверждение удаления аккаунта -->
+  <dialog id="deleteDialog">
+    <form id="deleteForm" method="dialog">
+      <h3>Удалить аккаунт?</h3>
+      <p>Будут безвозвратно удалены все ваши квизы, результаты и чаты, а также сама учётная запись.
+        Отменить это нельзя.</p>
+      <label for="deleteConfirm">Чтобы подтвердить, введите слово <strong>УДАЛИТЬ</strong></label>
+      <input id="deleteConfirm" autocomplete="off">
+      <div id="deleteMessage" class="hint" role="status"></div>
+      <div class="row">
+        <button id="deleteCancel" type="button">Отмена</button>
+        <button id="deleteSubmit" type="submit" class="danger">Удалить навсегда</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="material-box">
     <strong>Материал (необязательно)</strong>
     <div class="hint">Загрузите файл или вставьте текст. Все вкладки будут опираться на него.</div>
@@ -29,6 +94,8 @@
     <button class="tab" data-panel="flashPanel">Карточки</button>
     <button class="tab" data-panel="studyPanel">Конспект</button>
     <button class="tab" data-panel="chatPanel">Чат</button>
+    <button class="tab" data-panel="libraryPanel">Мои квизы</button>
+    <button class="tab" data-panel="historyPanel">История</button>
   </div>
 
   <!-- Квиз -->
@@ -104,6 +171,13 @@
       <option value="strict">Строгий преподаватель</option>
     </select>
 
+    <details id="chatSessionsBox" class="sessions-box">
+      <summary>Сохранённые чаты</summary>
+      <div id="chatSessionsMessage" class="hint"></div>
+      <div id="chatSessions"></div>
+    </details>
+
+    <div id="chatTitle" class="hint">Новый чат</div>
     <div id="chatLog"></div>
 
     <div class="chat-input">
@@ -112,16 +186,33 @@
     </div>
     <div class="row">
       <button id="chatReset" type="button">Новый чат</button>
+      <span id="chatSaveNote" class="hint" style="margin-top:0;"></span>
     </div>
   </div>
+
+  <!-- Мои квизы -->
+  <div id="libraryPanel" class="panel" hidden>
+    <div id="libraryMessage" class="message"></div>
+    <div id="libraryList"></div>
+  </div>
+
+  <!-- История результатов -->
+  <div id="historyPanel" class="panel" hidden>
+    <div id="historyMessage" class="message"></div>
+    <div id="historyList"></div>
+  </div>
+
+  </div><!-- /app -->
 
   <!-- Порядок важен: сначала common.js, потом остальные -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
   <script src="js/common.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/tabs.js"></script>
   <script src="js/material.js"></script>
   <script src="js/quiz.js"></script>
@@ -129,5 +220,8 @@
   <script src="js/flashcards.js"></script>
   <script src="js/study.js"></script>
   <script src="js/chat.js"></script>
+  <script src="js/library.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/account.js"></script>
 </body>
 </html>

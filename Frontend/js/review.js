@@ -11,7 +11,7 @@ async function startReview(mistakes, box, button) {
 
   const sent = mistakes.slice(0, MAX_MISTAKES);
   try {
-    const response = await fetch(API_URL + "/review", {
+    const response = await apiFetch("/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -90,7 +90,10 @@ function renderReview(box, data) {
     const practiceBox = document.createElement("div");
     box.append(title, practiceBox);
     // Тот же квиз, что и основной: со счётом и повторным разбором ошибок
-    renderQuiz(practiceBox, data.practice, { assignment: $("assignment").checked });
+    renderQuiz(practiceBox, data.practice, {
+      assignment: $("assignment").checked,
+      meta: { topic: "Тренировка: " + ($("topic").value.trim() || "по материалу"), difficulty: "" },
+    });
   }
 }
 

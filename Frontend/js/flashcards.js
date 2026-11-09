@@ -70,7 +70,7 @@ fcBtn.addEventListener("click", async () => {
   fcMessage.textContent = "Создаю карточки, подождите...";
 
   try {
-    const response = await fetch(API_URL + "/flashcards", {
+    const response = await apiFetch("/flashcards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic, count, material: materialText }),
