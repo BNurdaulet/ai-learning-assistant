@@ -17,12 +17,11 @@
 
   function apply(theme) {
     root.setAttribute("data-theme", theme);
-    const button = document.getElementById("themeToggle");
-    if (button) {
-      const label = theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
+    const label = theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
+    document.querySelectorAll(".theme-toggle").forEach((button) => {
       button.setAttribute("aria-label", label);
       button.title = label;
-    }
+    });
   }
 
   apply(saved() || (system.matches ? "dark" : "light"));
@@ -33,17 +32,18 @@
   });
 
   document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("themeToggle");
-    if (!button) return;
     apply(root.getAttribute("data-theme"));
-    button.addEventListener("click", () => {
-      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      try {
-        localStorage.setItem(KEY, next);
-      } catch (e) {
-        // не сохранилось — тема всё равно переключится до перезагрузки
-      }
-      apply(next);
+    // Кнопок темы может быть несколько (шапка, экран входа) — все с классом .theme-toggle
+    document.querySelectorAll(".theme-toggle").forEach((button) => {
+      button.addEventListener("click", () => {
+        const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try {
+          localStorage.setItem(KEY, next);
+        } catch (e) {
+          // не сохранилось — тема всё равно переключится до перезагрузки
+        }
+        apply(next);
+      });
     });
   });
 })();

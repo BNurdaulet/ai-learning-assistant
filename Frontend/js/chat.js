@@ -43,6 +43,12 @@ async function sendChat() {
   const text = chatInput.value.trim();
   if (!text) return;
 
+  // Команды /квиз, /карточки, /конспект, /план выполняет commands.js (ответ — карточка в ленте)
+  if (typeof runCommand === "function" && runCommand(text)) {
+    chatInput.value = "";
+    return;
+  }
+
   chatInput.value = "";
   chatHistory.push({ role: "user", content: text });
   const userBubble = addBubble("user", text);
