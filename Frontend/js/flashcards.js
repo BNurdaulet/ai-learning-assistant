@@ -22,9 +22,7 @@ async function runFlashcards(statusEl, container, button) {
   }
 
   if (button) button.disabled = true;
-  statusEl.textContent = activeDoc
-    ? t("cards.creatingDoc")
-    : t("cards.creating");
+  const stopThinking = startThinking(statusEl);
   let result = null;
 
   try {
@@ -43,6 +41,8 @@ async function runFlashcards(statusEl, container, button) {
     }
   } catch (error) {
     statusEl.textContent = t("common.noServer", { message: error.message });
+  } finally {
+    stopThinking();
   }
 
   if (button) button.disabled = false;

@@ -22,7 +22,7 @@ async function runQuiz(statusEl, container, button) {
   }
 
   if (button) button.disabled = true;
-  statusEl.textContent = t("quiz.generating");
+  const stopThinking = startThinking(statusEl);
   container.innerHTML = "";
   let result = null;
 
@@ -45,6 +45,8 @@ async function runQuiz(statusEl, container, button) {
     }
   } catch (error) {
     statusEl.textContent = t("common.noServer", { message: error.message });
+  } finally {
+    stopThinking();
   }
 
   if (button) button.disabled = false;

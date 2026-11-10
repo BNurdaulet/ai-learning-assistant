@@ -213,7 +213,6 @@
   "chat.send": "Send",
   "chat.saved": "Saved chats",
   "chat.noSaved": "No saved chats yet.",
-  "chat.thinking": "Thinking...",
   "chat.notSaved": "Chat not saved: {message}",
   "chat.sources": "Sources: {pages}",
   "chat.notFound": "Nothing was found in the document for this question.",
@@ -226,7 +225,6 @@
   "difficulty.hard": "hard",
   "quiz.assignmentMode": "Assignment mode (answers are hidden until you click “Show answers”)",
   "quiz.generate": "Generate quiz",
-  "quiz.generating": "Generating, please wait...",
   "quiz.save": "Save quiz",
   "quiz.saved": "Quiz saved",
   "quiz.saving": "Saving...",
@@ -248,7 +246,6 @@
   "quiz.byMaterial": "From material",
   "quiz.sources": "Questions from: {pages}.",
 
-  "review.progress": "Reviewing mistakes, please wait...",
   "review.partial": "Reviewed the first {sent} of {total} mistakes.",
   "review.title": "Mistake review",
   "review.yourAnswer": "Your answer: ",
@@ -266,16 +263,11 @@
   "cards.prev": "← Back",
   "cards.next": "Next →",
   "cards.shuffle": "Shuffle",
-  "cards.creating": "Creating flashcards, please wait...",
-  "cards.creatingDoc": "Creating flashcards from the document. A large document is processed in parts, this may take a minute...",
 
   "study.summary": "Short summary",
   "study.plan": "Study plan",
   "study.copy": "Copy",
   "study.copied": "Copied (Markdown)",
-  "study.writingSummary": "Writing a summary, please wait...",
-  "study.writingPlan": "Making a plan, please wait...",
-  "study.docSlow": " A large document is processed in parts, this may take a minute.",
 
   "library.empty": "No saved quizzes yet. Click “Save quiz” below a quiz.",
   "library.savedQuiz": "Saved quiz: {topic}",
@@ -369,7 +361,6 @@
   "asg.materialNone": "No material added — the assignment will be based on the topic.",
   "asg.materialBtn": "Add or change material",
   "asg.generate": "Generate",
-  "asg.generating": "Creating the assignment… This can take up to a minute.",
   "asg.previewTitle": "Check before publishing",
   "asg.previewHint": "Remove any questions or cards you don't want. Students will see the assignment exactly like this.",
   "asg.questions.one": "{count} question",
@@ -468,5 +459,15 @@
   "errors.assignment_empty": "The assignment is empty: it needs at least one question, card or text.",
   "errors.too_many_cards": "Too many cards (maximum {max}).",
   "errors.summary_too_long": "The summary is too long (maximum {max} characters).",
-  "errors.invalid_assignment_type": "Unknown assignment type."
+  "errors.invalid_assignment_type": "Unknown assignment type.",
+
+  "thinking.1": "Flipping through my notes…",
+  "thinking.2": "Sharpening pencils…",
+  "thinking.3": "Highlighting the important bits…",
+  "thinking.4": "Putting my thoughts in order…",
+  "thinking.5": "Looking for the bookmark…",
+  "thinking.6": "Recalling the last lesson…",
+  "thinking.7": "Brewing tea for a brainstorm…",
+  "thinking.8": "Reviewing the times tables…",
+  "thinking.slow": "The server is waking up — this can take up to a minute."
 }

@@ -6,8 +6,8 @@ async function startReview(mistakes, box, button) {
   box.innerHTML = "";
   const status = document.createElement("div");
   status.className = "hint";
-  status.textContent = t("review.progress");
   box.appendChild(status);
+  const stopThinking = startThinking(status);
 
   const sent = mistakes.slice(0, MAX_MISTAKES);
   try {
@@ -37,6 +37,8 @@ async function startReview(mistakes, box, button) {
   } catch (error) {
     status.textContent = t("common.noServer", { message: error.message });
     button.disabled = false;
+  } finally {
+    stopThinking();
   }
 }
 

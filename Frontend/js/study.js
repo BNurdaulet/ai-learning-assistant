@@ -20,8 +20,7 @@ async function runStudy(kind, statusEl, container, buttons = []) {
   }
 
   buttons.forEach((b) => (b.disabled = true));
-  statusEl.textContent = kind === "summary" ? t("study.writingSummary") : t("study.writingPlan");
-  if (activeDoc) statusEl.textContent += t("study.docSlow");
+  const stopThinking = startThinking(statusEl);
   let result = null;
 
   try {
@@ -40,6 +39,8 @@ async function runStudy(kind, statusEl, container, buttons = []) {
     }
   } catch (error) {
     statusEl.textContent = t("common.noServer", { message: error.message });
+  } finally {
+    stopThinking();
   }
 
   buttons.forEach((b) => (b.disabled = false));

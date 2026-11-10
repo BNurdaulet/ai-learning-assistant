@@ -52,7 +52,8 @@ async function sendChat() {
   chatInput.value = "";
   chatHistory.push({ role: "user", content: text });
   const userBubble = addBubble("user", text);
-  const botBubble = addBubble("assistant", t("chat.thinking"));
+  const botBubble = addBubble("assistant", "");
+  const stopThinking = startThinking(botBubble);
   chatSend.disabled = true;
 
   try {
@@ -87,6 +88,8 @@ async function sendChat() {
     botBubble.textContent = t("common.noServer", { message: error.message });
     botBubble.classList.add("error");
     chatInput.value = text;
+  } finally {
+    stopThinking();
   }
 
   chatSend.disabled = false;

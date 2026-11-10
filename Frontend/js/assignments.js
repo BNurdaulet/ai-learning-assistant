@@ -164,7 +164,7 @@
     $("asgPublished").hidden = true;
     $("asgPreview").innerHTML = "";
     draft = null;
-    status.textContent = t("asg.generating");
+    const stopThinking = startThinking(status);
     try {
       const response = await apiJson(request[0], "POST", request[1]);
       if (!response.ok) {
@@ -185,6 +185,7 @@
     } catch (error) {
       status.textContent = t("common.noServer", { message: error.message });
     } finally {
+      stopThinking();
       $("asgGenerate").disabled = false;
     }
   }
