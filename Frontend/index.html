@@ -146,6 +146,7 @@
       <button type="button" class="nav-link" data-go="libraryPanel" data-i18n="nav.quizzes">Мои квизы</button>
       <button type="button" class="nav-link" data-action="docs" data-i18n="nav.docs">Документы</button>
       <button type="button" class="nav-link" data-go="historyPanel" data-i18n="nav.history">История</button>
+      <button type="button" class="nav-link" data-go="assignmentsPanel" data-i18n="nav.assignments"></button>
     </nav>
     <div class="header-actions">
       <details class="menu lang-menu">
@@ -167,6 +168,7 @@
             <button type="button" data-go="libraryPanel" data-i18n="nav.quizzes">Мои квизы</button>
             <button type="button" data-action="docs" data-i18n="nav.docs">Документы</button>
             <button type="button" data-go="historyPanel" data-i18n="nav.history">История</button>
+            <button type="button" data-go="assignmentsPanel" data-i18n="nav.assignments"></button>
           </div>
           <div class="userbar">
             <span id="userEmail"></span>
@@ -281,13 +283,14 @@
     <button class="tab" data-panel="studyPanel" tabindex="-1" data-i18n="tool.summary">Конспект</button>
     <button class="tab" data-panel="libraryPanel" tabindex="-1" data-i18n="nav.quizzes">Мои квизы</button>
     <button class="tab" data-panel="historyPanel" tabindex="-1" data-i18n="nav.history">История</button>
+    <button class="tab" data-panel="assignmentsPanel" tabindex="-1" data-i18n="nav.assignments"></button>
   </div>
 
   <!-- Заголовок раздела (всё, кроме главной) -->
   <div class="tool-bar no-print">
     <button type="button" class="icon-btn back-btn" data-go="chatPanel" aria-label="На главную" data-i18n-aria="nav.home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
     <h2 class="tool-title">
-      <span data-for="quizPanel" data-i18n="tool.quiz">Квиз</span><span data-for="flashPanel" data-i18n="tool.cards">Карточки</span><span data-for="studyPanel" data-i18n="tool.summary">Конспект</span><span data-for="libraryPanel" data-i18n="nav.quizzes">Мои квизы</span><span data-for="historyPanel" data-i18n="nav.history">История</span>
+      <span data-for="quizPanel" data-i18n="tool.quiz">Квиз</span><span data-for="flashPanel" data-i18n="tool.cards">Карточки</span><span data-for="studyPanel" data-i18n="tool.summary">Конспект</span><span data-for="libraryPanel" data-i18n="nav.quizzes">Мои квизы</span><span data-for="historyPanel" data-i18n="nav.history">История</span><span data-for="assignmentsPanel" data-i18n="nav.assignments"></span>
     </h2>
   </div>
 
@@ -435,6 +438,86 @@
     <div id="historyList"></div>
   </div>
 
+  <!-- Задания для учеников: создать, мои задания, результаты (логика в js/assignments.js) -->
+  <div id="assignmentsPanel" class="panel" hidden>
+    <div class="tabs asg-tabs" role="tablist">
+      <button type="button" class="tab active" role="tab" aria-selected="true" data-asg-view="asgCreate" data-i18n="asg.tabCreate"></button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-asg-view="asgList" data-i18n="asg.tabList"></button>
+    </div>
+
+    <!-- Создать: параметры → предпросмотр → публикация -->
+    <section id="asgCreate">
+      <p class="hint" data-i18n="asg.intro"></p>
+
+      <label id="asgTypeLabel" data-i18n="asg.type"></label>
+      <div class="tabs asg-type" role="group" aria-labelledby="asgTypeLabel">
+        <button type="button" class="tab active" aria-pressed="true" data-asg-type="quiz" data-i18n="tool.quiz"></button>
+        <button type="button" class="tab" aria-pressed="false" data-asg-type="flashcards" data-i18n="tool.cards"></button>
+        <button type="button" class="tab" aria-pressed="false" data-asg-type="summary" data-i18n="tool.summary"></button>
+      </div>
+
+      <label for="asgTitle" data-i18n="asg.titleLabel"></label>
+      <input id="asgTitle" maxlength="200" autocomplete="off" data-i18n-placeholder="asg.titlePlaceholder">
+
+      <label for="asgTopic" data-i18n="topic.label"></label>
+      <input id="asgTopic" maxlength="200" autocomplete="off" data-i18n-placeholder="topic.placeholder">
+
+      <div id="asgCountBox">
+        <label id="asgCountLabel" for="asgCount" data-i18n="quiz.countLabel"></label>
+        <input id="asgCount" type="number" min="1" max="20" value="5">
+      </div>
+
+      <div id="asgDifficultyBox">
+        <label for="asgDifficulty" data-i18n="quiz.difficulty"></label>
+        <!-- Значения — те же, что у квиза на главной (их понимает генератор) -->
+        <select id="asgDifficulty">
+          <option value="лёгкая" data-i18n="difficulty.easy"></option>
+          <option value="средняя" selected data-i18n="difficulty.medium"></option>
+          <option value="сложная" data-i18n="difficulty.hard"></option>
+        </select>
+      </div>
+
+      <label for="asgLang" data-i18n="asg.contentLang"></label>
+      <select id="asgLang" aria-describedby="asgLangHint">
+        <option value="ru" data-i18n="lang.name.ru"></option>
+        <option value="kk" data-i18n="lang.name.kk"></option>
+        <option value="en" data-i18n="lang.name.en"></option>
+      </select>
+      <div id="asgLangHint" class="hint" data-i18n="asg.contentLangHint"></div>
+
+      <div class="asg-material">
+        <span id="asgMaterialInfo" class="hint"></span>
+        <button type="button" class="btn-soft" data-action="text" data-i18n="asg.materialBtn"></button>
+      </div>
+
+      <button id="asgGenerate" type="button" class="primary" data-i18n="asg.generate"></button>
+      <div id="asgMessage" class="message" role="status"></div>
+      <div id="asgPreview"></div>
+
+      <!-- После публикации: ссылка для ученика -->
+      <div id="asgPublished" class="card" hidden>
+        <h3 data-i18n="asg.published"></h3>
+        <label for="asgLink" data-i18n="asg.linkLabel"></label>
+        <div class="asg-link-row">
+          <input id="asgLink" readonly>
+          <button id="asgCopyLink" type="button" class="btn-primary" data-i18n="asg.copyLink"></button>
+        </div>
+        <div id="asgCopyStatus" class="hint" role="status"></div>
+        <button id="asgAnother" type="button" class="btn-soft asg-another" data-i18n="asg.createAnother"></button>
+      </div>
+    </section>
+
+    <!-- Мои задания -->
+    <section id="asgList" hidden>
+      <div id="asgListMessage" class="message" role="status"></div>
+      <div id="asgItems"></div>
+      <div id="asgRetention" class="hint"></div>
+    </section>
+
+    <!-- Результаты одного задания (рисует js/assignments.js) -->
+    <section id="asgResults" hidden></section>
+  </div>
+
   </div><!-- /app -->
 
   <!-- Порядок важен: сначала common.js, потом остальные -->
@@ -450,6 +533,9 @@
   <script src="js/tabs.js"></script>
   <script src="js/material.js"></script>
   <script src="js/documents.js"></script>
+  <script src="js/quiz-view.js"></script>
+  <script src="js/flashcards-view.js"></script>
+  <script src="js/study-view.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/review.js"></script>
   <script src="js/flashcards.js"></script>
@@ -458,6 +544,7 @@
   <script src="js/commands.js"></script>
   <script src="js/library.js"></script>
   <script src="js/history.js"></script>
+  <script src="js/assignments.js"></script>
   <script src="js/account.js"></script>
   <script src="js/home-ui.js"></script>
 </body>

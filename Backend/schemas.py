@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class QuizQuestion(BaseModel):
@@ -121,3 +123,29 @@ class CreateChatRequest(BaseModel):
 
 class SaveMessagesRequest(BaseModel):
     messages: list[ChatMessage]
+
+
+# --- Задания для учеников ---
+
+class CreateAssignmentRequest(BaseModel):
+    """Учитель публикует задание. Заполняется поле по типу:
+    quiz -> questions, flashcards -> cards, summary -> text."""
+    type: str                      # "quiz", "flashcards" или "summary"
+    title: str = ""
+    content_lang: str = ""         # на каком языке ИИ составил содержимое: ru, kk, en или пусто
+    difficulty: str = ""
+    questions: list[QuizQuestion] = []
+    cards: list[Flashcard] = []
+    text: str = ""
+
+
+class UpdateAssignmentRequest(BaseModel):
+    is_open: bool
+
+
+class SubmitAttemptRequest(BaseModel):
+    """Ученик сдаёт задание. answers проверяются вручную по сохранённому заданию (student.py):
+    квиз {"choices": [...]}, карточки {"known": [...], "repeat": [...]}, конспект {"read": true}."""
+    name: str = Field(max_length=200)  # длиннее — точно не имя; обрезаем до 40 в student.py
+    answers: dict[str, Any]
+    duration_seconds: int | None = None

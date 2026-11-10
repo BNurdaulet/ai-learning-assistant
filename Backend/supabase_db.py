@@ -15,8 +15,18 @@ http = httpx.Client(timeout=15)  # один клиент на всё прило�
 
 # Коды, которые значат «таблицы или функции нет» (schema.sql не запускали)
 SCHEMA_MISSING_CODES = {"PGRST205", "PGRST202", "42P01", "42883"}
-# Таблицы и функции из supabase/documents.sql (для них своя подсказка)
+# Таблицы и функции из supabase/documents.sql и assignments.sql (для них своя подсказка)
 DOCUMENT_OBJECTS = {"documents", "chunks", "rpc search_chunks"}
+ASSIGNMENT_OBJECTS = {"assignments", "attempts", "rpc get_assignment_by_code", "rpc submit_attempt"}
+
+# Ошибки, которые функции базы бросают сами (raise exception '<текст>'): текст -> (HTTP-код, код ошибки)
+RAISED = {
+    "documents_limit": (400, "documents_limit_reached"),
+    "assignment_unavailable": (404, "assignment_unavailable"),
+    "attempts_limit": (409, "attempts_limit"),
+    "invalid_name": (400, "invalid_name"),
+    "invalid_answers": (400, "invalid_answers"),
+}
 
 
 class DbError(AppError):
@@ -38,10 +48,16 @@ def _check(response, what):
         code = message = None
     print(f"Supabase ({what}): ошибка {response.status_code}, код {code}")
     if code in SCHEMA_MISSING_CODES:
-        script = "documents.sql" if what in DOCUMENT_OBJECTS else "schema.sql"
+        if what in DOCUMENT_OBJECTS:
+            script = "documents.sql"
+        elif what in ASSIGNMENT_OBJECTS:
+            script = "assignments.sql"
+        else:
+            script = "schema.sql"
         raise DbError(503, "db_not_configured", script=script)
-    if code == "P0001" and message == "documents_limit":
-        raise DbError(400, "documents_limit_reached")
+    if code == "P0001" and message in RAISED:
+        status, app_code = RAISED[message]
+        raise DbError(status, app_code)
     if response.status_code == 401:
         raise DbError(401, "session_expired")
     if response.status_code == 403:
@@ -70,16 +86,32 @@ def rest(method, table, token, params=None, body=None, returning=False):
 
 
 def rpc(function, token, args=None):
-    """Вызов функции Postgres (например, bump_ai_usage)."""
+    """Вызов функции Postgres (например, bump_ai_usage) от имени пользователя."""
+    return _rpc(function, _user_headers(token), args)
+
+
+def anon_rpc(function, args=None):
+    """Вызов функции Postgres без входа (роль anon) — для учеников.
+    Нужен только публичный anon/publishable-ключ, секретный ключ не используется."""
+    headers = {"apikey": SUPABASE_ANON_KEY}
+    if SUPABASE_ANON_KEY.startswith("eyJ"):
+        # Старый anon-ключ (JWT) передаём ещё и в Authorization; новый sb_publishable_ — только в apikey
+        headers["Authorization"] = f"Bearer {SUPABASE_ANON_KEY}"
+    return _rpc(function, headers, args)
+
+
+def _rpc(function, headers, args):
     try:
         response = http.post(
             f"{SUPABASE_URL}/rest/v1/rpc/{function}",
-            headers=_user_headers(token), json=args or {},
+            headers=headers, json=args or {},
         )
     except httpx.HTTPError:
         print(f"Supabase (rpc {function}): нет связи")
         raise DbError(502, "db_unreachable")
     _check(response, f"rpc {function}")
+    if not response.content:
+        return None
     return response.json()
 
 

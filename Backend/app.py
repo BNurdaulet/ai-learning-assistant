@@ -2,14 +2,16 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from auth import User, ai_limit, current_user
 from chat import build_document_system, build_system, generate_reply
 from errors import AppError
 from config import (
+    ATTEMPT_RETENTION_DAYS,
     CHAT_TOP_CHUNKS,
+    MAX_PUBLIC_BODY_BYTES,
     MAX_FIELD_CHARS,
     MAX_FLASHCARDS,
     MAX_HISTORY,
@@ -18,8 +20,13 @@ from config import (
     MAX_OPTION_CHARS,
     MAX_TOPIC_CHARS,
     SUPABASE_ANON_KEY,
+    STUDENT_READS_PER_MINUTE,
+    STUDENT_SUBMITS_PER_MINUTE,
     SUPABASE_URL,
 )
+import assignments
+import student
+from ratelimit import BodySizeLimit, RateLimiter, client_ip
 from files import extract_text
 import vision
 from flashcards import generate_flashcards
@@ -31,6 +38,7 @@ from review import review_mistakes
 import userdata
 from schemas import (
     ChatRequest,
+    CreateAssignmentRequest,
     CreateChatRequest,
     FlashcardsRequest,
     QuizRequest,
@@ -39,6 +47,8 @@ from schemas import (
     SaveResultRequest,
     SaveMessagesRequest,
     StudyRequest,
+    SubmitAttemptRequest,
+    UpdateAssignmentRequest,
 )
 from study import KINDS, generate_study
 
@@ -50,6 +60,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Ученики без входа: тело запроса к /api/a/... не больше MAX_PUBLIC_BODY_BYTES
+app.add_middleware(BodySizeLimit, prefix="/api/a/", max_bytes=MAX_PUBLIC_BODY_BYTES)
 
 # Ошибки уходят кодом: {"detail": "file_too_large", "params": {...}}.
 # Текст на языке пользователя фронтенд берёт из словаря (Frontend/i18n, ключи errors.<код>).
@@ -350,6 +362,87 @@ def delete_account(user: User = Depends(current_user)):
     return userdata.delete_account(user)
 
 
+# ---------- Задания: сторона учителя ----------
+
+@app.post("/assignments")
+def create_assignment(data: CreateAssignmentRequest, user: User = Depends(current_user)):
+    return assignments.create_assignment(user, data)
+
+
+@app.get("/assignments")
+def list_assignments(user: User = Depends(current_user)):
+    return {"assignments": assignments.list_assignments(user), "retention_days": ATTEMPT_RETENTION_DAYS}
+
+
+@app.patch("/assignments/{assignment_id}")
+def update_assignment(assignment_id: str, data: UpdateAssignmentRequest, user: User = Depends(current_user)):
+    return assignments.set_open(user, assignment_id, data.is_open)
+
+
+@app.delete("/assignments/{assignment_id}")
+def delete_assignment(assignment_id: str, user: User = Depends(current_user)):
+    return assignments.delete_assignment(user, assignment_id)
+
+
+@app.get("/assignments/{assignment_id}/results")
+def assignment_results(assignment_id: str, user: User = Depends(current_user)):
+    return assignments.get_results(user, assignment_id)
+
+
+@app.get("/assignments/{assignment_id}/results.csv")
+def assignment_results_csv(assignment_id: str, lang: str = "ru", user: User = Depends(current_user)):
+    results = assignments.get_results(user, assignment_id)
+    body = assignments.results_csv(results["assignment"]["type"], results["attempts"], lang)
+    filename = assignments.csv_filename(results["assignment"])
+    return Response(content=body, media_type="text/csv; charset=utf-8", headers={
+        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Cache-Control": "no-store",
+    })
+
+
+@app.delete("/attempts/{attempt_id}")
+def delete_attempt(attempt_id: str, user: User = Depends(current_user)):
+    return assignments.delete_attempt(user, attempt_id)
+
+
+# ---------- Задания: ученик (БЕЗ входа) ----------
+
+READ_LIMITER = RateLimiter(STUDENT_READS_PER_MINUTE)
+SUBMIT_LIMITER = RateLimiter(STUDENT_SUBMITS_PER_MINUTE)
+# Страницы и ответы для учеников не должны попадать в поисковики и кэш
+PRIVATE_HEADERS = {"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
+
+
+def student_reads(request: Request):
+    if not READ_LIMITER.hit(client_ip(request)):
+        raise AppError(429, "too_many_requests")
+
+
+def student_submits(request: Request):
+    if not SUBMIT_LIMITER.hit(client_ip(request)):
+        raise AppError(429, "too_many_requests")
+
+
+@app.get("/api/a/{code}", dependencies=[Depends(student_reads)])
+def student_assignment(code: str, response: Response):
+    response.headers.update(PRIVATE_HEADERS)
+    return student.public_view(student.load_assignment(code))
+
+
+@app.post("/api/a/{code}/submit", dependencies=[Depends(student_submits)])
+def student_submit(code: str, data: SubmitAttemptRequest, response: Response):
+    response.headers.update(PRIVATE_HEADERS)
+    return student.submit(code, data)
+
+
 # Страницу из папки Frontend отдаёт тот же сервер. Эта строка должна быть в самом конце.
 FRONTEND = Path(__file__).resolve().parent.parent / "Frontend"
+
+
+@app.get("/a/{code}")
+def student_page(code: str):
+    """Страница задания для ученика. Код проверяет уже сама страница (через /api/a/{code})."""
+    return FileResponse(FRONTEND / "assignment.html", headers=PRIVATE_HEADERS)
+
+
 app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")

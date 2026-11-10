@@ -219,13 +219,14 @@ def delete_account(user):
     затем саму учётную запись в Supabase Auth (нужен SUPABASE_SERVICE_KEY)."""
     for table in ("chat_messages", "chat_sessions", "quiz_results", "quizzes"):
         db.rest("DELETE", table, user.token, params={"user_id": f"eq.{user.id}"})
-    # Документы (их части удалятся каскадом). Если documents.sql ещё не запускали,
-    # таблицы нет — тогда и удалять нечего.
-    try:
-        db.rest("DELETE", "documents", user.token, params={"user_id": f"eq.{user.id}"})
-    except db.DbError as e:
-        if e.status_code != 503:
-            raise
+    # Документы (их части удалятся каскадом) и задания (попытки учеников удалятся каскадом).
+    # Если documents.sql / assignments.sql ещё не запускали, таблицы нет — тогда и удалять нечего.
+    for table, owner in (("documents", "user_id"), ("assignments", "teacher_id")):
+        try:
+            db.rest("DELETE", table, user.token, params={owner: f"eq.{user.id}"})
+        except db.DbError as e:
+            if e.status_code != 503:
+                raise
     # Счётчик за прошлые дни; сегодняшняя строка удалится вместе с учётной записью
     db.rest("DELETE", "ai_usage", user.token, params={"user_id": f"eq.{user.id}"})
 

@@ -42,6 +42,18 @@ MAX_CONTEXT_CHARS = 15000            # сколько текста докуме�
 CHAT_TOP_CHUNKS = 5                  # сколько найденных частей получает чат
 MAX_MAPREDUCE_CALLS = 8              # максимум вызовов ИИ на один конспект/план/карточки по документу
 
+# Задания для учеников (см. supabase/assignments.sql)
+MAX_ATTEMPTS_PER_ASSIGNMENT = 500    # попыток на одно задание. То же число стоит в assignments.sql!
+ATTEMPT_RETENTION_DAYS = 180         # попытки старше стольких дней удаляются (0 = не удалять)
+MAX_STUDENT_NAME = 40                # длина имени ученика
+MAX_SUMMARY_CHARS = 30000            # длина конспекта в задании
+MAX_ASSIGNMENT_TITLE = 200           # длина названия задания
+MAX_PUBLIC_BODY_BYTES = 64 * 1024    # размер запроса от ученика (без входа): 64 КБ
+# Лимиты запросов от ученика с одного IP-адреса (за минуту). Щедрые: весь класс
+# часто сидит за одним IP школы. Счётчики в памяти сервера (см. ratelimit.py).
+STUDENT_READS_PER_MINUTE = 120
+STUDENT_SUBMITS_PER_MINUTE = 60
+
 # Supabase (вход и хранение данных). URL и anon/publishable-ключ публичные.
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
