@@ -77,9 +77,11 @@
 
   <div class="material-box">
     <strong>Материал (необязательно)</strong>
-    <div class="hint">Загрузите файл или вставьте текст. Все вкладки будут опираться на него.</div>
+    <div class="hint">Загрузите файл, сфотографируйте конспект или страницу учебника, или вставьте текст. Все вкладки будут опираться на него.</div>
     <div class="row">
       <input id="file" type="file" accept=".pdf,.txt,.md" style="width:auto; margin-top:0;">
+      <input id="photo" type="file" accept="image/*" multiple hidden>
+      <button id="photoBtn" type="button">Добавить фото</button>
       <button id="clearMaterial" type="button">Очистить</button>
     </div>
     <textarea id="material" placeholder="Или вставьте сюда текст урока..." style="margin-top:8px;"></textarea>

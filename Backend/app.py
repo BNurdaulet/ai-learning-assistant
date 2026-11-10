@@ -20,6 +20,7 @@ from config import (
     SUPABASE_URL,
 )
 from files import FileError, extract_text
+import vision
 from flashcards import generate_flashcards
 import documents
 import mapreduce
@@ -79,6 +80,21 @@ async def extract(file: UploadFile = File(...), user: User = Depends(current_use
     except FileError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
     return {"text": text, "truncated": truncated, "total_chars": total}
+
+
+@app.post("/photo")
+def photo(files: list[UploadFile] = File(...), user: User = Depends(ai_limit)):
+    """Распознаёт текст с фотографий и возвращает его как материал."""
+    try:
+        images = vision.check_photos([(f.filename or "фото", f.file.read()) for f in files])
+    except FileError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    text = vision.photos_to_text(images)
+    if text is None:
+        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+    if not text:
+        raise HTTPException(status_code=422, detail="На фото не удалось найти текст.")
+    return {"text": text[:MAX_MATERIAL_CHARS], "truncated": len(text) > MAX_MATERIAL_CHARS}
 
 
 def document_material(user, data, k=retrieval.CHUNKS_PER_CALL):
