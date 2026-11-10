@@ -35,7 +35,7 @@ async function saveExchange(question, reply) {
     note.textContent = "";
     if ($("chatSessionsBox").open) loadChatSessions();
   } catch (error) {
-    note.textContent = "Чат не сохранён: " + error.message;
+    note.textContent = t("chat.notSaved", { message: error.message });
   }
 }
 
@@ -52,7 +52,7 @@ async function sendChat() {
   chatInput.value = "";
   chatHistory.push({ role: "user", content: text });
   const userBubble = addBubble("user", text);
-  const botBubble = addBubble("assistant", "Думаю...");
+  const botBubble = addBubble("assistant", t("chat.thinking"));
   chatSend.disabled = true;
 
   try {
@@ -64,13 +64,14 @@ async function sendChat() {
         material: activeDoc ? "" : material.value.trim(),
         style: $("style").value,
         document_id: activeDoc ? activeDoc.id : null,
+        lang: getLang(),
       }),
     });
     if (!response.ok) {
       // Убираем неотправленный вопрос и возвращаем его в поле ввода
       chatHistory.pop();
       userBubble.remove();
-      botBubble.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      botBubble.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       botBubble.classList.add("error");
       chatInput.value = text;
     } else {
@@ -83,7 +84,7 @@ async function sendChat() {
   } catch (error) {
     chatHistory.pop();
     userBubble.remove();
-    botBubble.textContent = "Не удалось связаться с сервером: " + error.message;
+    botBubble.textContent = t("common.noServer", { message: error.message });
     botBubble.classList.add("error");
     chatInput.value = text;
   }
@@ -95,8 +96,8 @@ async function sendChat() {
 // Мелкая подпись под ответом: по каким страницам документа он составлен
 function addSources(bubble, data) {
   let text = "";
-  if (data.sources && data.sources.length) text = "Источники: " + formatSources(data.sources);
-  else if (data.found === false) text = "В документе ничего не найдено по этому вопросу.";
+  if (data.sources && data.sources.length) text = t("chat.sources", { pages: formatSources(data.sources) });
+  else if (data.found === false) text = t("chat.notFound");
   if (!text) return;
   const line = document.createElement("div");
   line.className = "sources";
@@ -108,33 +109,33 @@ function newChat() {
   chatHistory = [];
   currentSessionId = null;
   chatLog.innerHTML = "";
-  $("chatTitle").textContent = "Новый чат";
+  setText($("chatTitle"), "chat.newChat");
   $("chatSaveNote").textContent = "";
 }
 
 async function loadChatSessions() {
   const box = $("chatSessions");
   const msg = $("chatSessionsMessage");
-  msg.textContent = "Загружаю...";
+  msg.textContent = t("common.loading");
   try {
     const response = await apiFetch("/chats");
     if (!response.ok) {
-      msg.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      msg.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       return;
     }
     const data = await response.json();
     box.innerHTML = "";
-    msg.textContent = data.chats.length ? "" : "Сохранённых чатов пока нет.";
+    msg.textContent = data.chats.length ? "" : t("chat.noSaved");
     data.chats.forEach((c) => {
       const item = listItem(c.title, formatDate(c.created_at), [
-        ["Открыть", (b) => openChat(c.id, b)],
-        ["Удалить", (b) => deleteChat(c.id, c.title, b), "danger"],
+        [t("common.open"), (b) => openChat(c.id, b)],
+        [t("common.delete"), (b) => deleteChat(c.id, c.title, b), "danger"],
       ]);
       if (c.id === currentSessionId) item.classList.add("active");
       box.appendChild(item);
     });
   } catch (error) {
-    msg.textContent = "Не удалось связаться с сервером: " + error.message;
+    msg.textContent = t("common.noServer", { message: error.message });
   }
 }
 
@@ -143,7 +144,7 @@ async function openChat(id, button) {
   try {
     const response = await apiFetch("/chats/" + encodeURIComponent(id));
     if (!response.ok) {
-      $("chatSessionsMessage").textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      $("chatSessionsMessage").textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       return;
     }
     const session = await response.json();
@@ -158,26 +159,26 @@ async function openChat(id, button) {
     });
     loadChatSessions();
   } catch (error) {
-    $("chatSessionsMessage").textContent = "Не удалось связаться с сервером: " + error.message;
+    $("chatSessionsMessage").textContent = t("common.noServer", { message: error.message });
   } finally {
     button.disabled = false;
   }
 }
 
 async function deleteChat(id, title, button) {
-  if (!confirm("Удалить чат «" + title + "»?")) return;
+  if (!confirm(t("chat.confirmDelete", { title }))) return;
   button.disabled = true;
   try {
     const response = await apiJson("/chats/" + encodeURIComponent(id), "DELETE");
     if (!response.ok) {
-      $("chatSessionsMessage").textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      $("chatSessionsMessage").textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       button.disabled = false;
       return;
     }
     if (id === currentSessionId) newChat();
     loadChatSessions();
   } catch (error) {
-    $("chatSessionsMessage").textContent = "Не удалось связаться с сервером: " + error.message;
+    $("chatSessionsMessage").textContent = t("common.noServer", { message: error.message });
     button.disabled = false;
   }
 }

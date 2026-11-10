@@ -3,36 +3,36 @@ const historyList = $("historyList");
 const historyMessage = $("historyMessage");
 
 async function loadHistory() {
-  historyMessage.textContent = "Загружаю...";
+  historyMessage.textContent = t("common.loading");
   try {
     const response = await apiFetch("/history");
     if (!response.ok) {
-      historyMessage.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      historyMessage.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       return;
     }
     const data = await response.json();
     historyList.innerHTML = "";
-    historyMessage.textContent = data.results.length ? "" : "Пока нет результатов. Пройдите квиз до конца.";
+    historyMessage.textContent = data.results.length ? "" : t("history.empty");
     data.results.forEach((r) => historyList.appendChild(historyItem(r)));
   } catch (error) {
-    historyMessage.textContent = "Не удалось связаться с сервером: " + error.message;
+    historyMessage.textContent = t("common.noServer", { message: error.message });
   }
 }
 
 function historyItem(r) {
   const percent = Math.round((r.score / r.total) * 100);
-  const subtitle = r.score + " из " + r.total + " (" + percent + "%) · " + formatDate(r.created_at);
+  const subtitle = t("history.score", { score: r.score, total: r.total, percent }) + " · " + formatDate(r.created_at);
   const details = document.createElement("div");
   details.hidden = true;
 
   const buttons = [];
   if (r.mistakes.length > 0) {
-    buttons.push(["Ошибки (" + r.mistakes.length + ")", () => {
+    buttons.push([t("history.mistakes", { count: r.mistakes.length }), () => {
       details.hidden = !details.hidden;
       if (!details.hidden && !details.childElementCount) fillMistakes(details, r.mistakes);
     }]);
   }
-  const item = listItem(r.topic || "Без темы", subtitle, buttons);
+  const item = listItem(r.topic || t("common.noTopic"), subtitle, buttons);
   item.appendChild(details);
   details.className = "history-details";
   return item;
@@ -48,7 +48,7 @@ function fillMistakes(box, mistakes) {
     const q = document.createElement("span");
     renderRich(q, m.question, true);
     title.append(num, q);
-    card.append(title, richLine("Ваш ответ: ", m.chosen, "wrong-text"), richLine("Правильный ответ: ", m.correct, "ok-text"));
+    card.append(title, richLine(t("review.yourAnswer"), m.chosen, "wrong-text"), richLine(t("review.correctAnswer"), m.correct, "ok-text"));
     if (m.explanation) {
       const ex = document.createElement("div");
       ex.className = "explanation";
@@ -62,7 +62,7 @@ function fillMistakes(box, mistakes) {
   const reviewBox = document.createElement("div");
   const reviewBtn = document.createElement("button");
   reviewBtn.type = "button";
-  reviewBtn.textContent = "Разобрать ошибки";
+  reviewBtn.textContent = t("quiz.review");
   reviewBtn.style.marginTop = "10px";
   reviewBtn.addEventListener("click", () => startReview(mistakes, reviewBox, reviewBtn));
   box.append(reviewBtn, reviewBox);

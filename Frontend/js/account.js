@@ -1,4 +1,4 @@
-// Удаление аккаунта и всех данных (с подтверждением словом «УДАЛИТЬ»).
+// Удаление аккаунта и всех данных (с подтверждением словом «УДАЛИТЬ» / «ЖОЮ» / «DELETE» — по языку).
 const deleteDialog = $("deleteDialog");
 const deleteMessage = $("deleteMessage");
 
@@ -13,30 +13,31 @@ $("deleteCancel").addEventListener("click", () => deleteDialog.close());
 
 $("deleteForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if ($("deleteConfirm").value.trim().toUpperCase() !== "УДАЛИТЬ") {
-    deleteMessage.textContent = "Введите слово УДАЛИТЬ, чтобы подтвердить.";
+  const word = t("delete.word");
+  if ($("deleteConfirm").value.trim().toUpperCase() !== word.toUpperCase()) {
+    deleteMessage.textContent = t("delete.wrongWord", { word });
     return;
   }
 
   $("deleteSubmit").disabled = true;
-  deleteMessage.textContent = "Удаляю...";
+  deleteMessage.textContent = t("delete.progress");
   try {
     const response = await apiJson("/account", "DELETE");
     if (!response.ok) {
-      deleteMessage.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      deleteMessage.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       $("deleteSubmit").disabled = false;
       return;
     }
     const data = await response.json();
     deleteDialog.close();
     alert(data.auth_user_deleted
-      ? "Аккаунт и все данные удалены."
-      : "Все ваши данные удалены. Учётную запись (email) сервер удалить не смог — обратитесь к владельцу сайта.");
+      ? t("delete.done")
+      : t("delete.donePartial"));
     // Сессию стираем только в этом браузере (на сервере пользователя уже может не быть).
     // После выхода страница перезагрузится (см. auth.js).
     await sb.auth.signOut({ scope: "local" });
   } catch (error) {
-    deleteMessage.textContent = "Не удалось связаться с сервером: " + error.message;
+    deleteMessage.textContent = t("common.noServer", { message: error.message });
     $("deleteSubmit").disabled = false;
   }
 });

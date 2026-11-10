@@ -26,7 +26,7 @@ function renderQuiz(container, questions, options = {}) {
   head.className = "tool-head";
   const tag = document.createElement("span");
   tag.className = "tool-tag";
-  tag.textContent = "Квиз" + (meta.topic ? " · " + meta.topic : "");
+  tag.textContent = t("tool.quiz") + (meta.topic ? " · " + meta.topic : "");
   const counter = document.createElement("span");
   counter.className = "tool-counter";
   head.append(tag, counter);
@@ -42,11 +42,11 @@ function renderQuiz(container, questions, options = {}) {
   saveBtn.className = "btn-soft";
   const saveStatus = document.createElement("div");
   saveStatus.className = "hint no-print";
-  saveBtn.textContent = quizId ? "Квиз сохранён" : "Сохранить квиз";
+  saveBtn.textContent = quizId ? t("quiz.saved") : t("quiz.save");
   saveBtn.disabled = !!quizId;
   saveBtn.addEventListener("click", async () => {
     saveBtn.disabled = true;
-    saveStatus.textContent = "Сохраняю...";
+    saveStatus.textContent = t("quiz.saving");
     try {
       const response = await apiJson("/quizzes", "POST", {
         topic: meta.topic,
@@ -54,16 +54,16 @@ function renderQuiz(container, questions, options = {}) {
         questions,
       });
       if (!response.ok) {
-        saveStatus.textContent = "Ошибка: " + (await readError(response));
+        saveStatus.textContent = t("common.error", { message: await readError(response) });
         saveBtn.disabled = false;
         return;
       }
       quizId = (await response.json()).id;
-      saveBtn.textContent = "Квиз сохранён";
-      saveStatus.textContent = "Он появится в разделе «Мои квизы».";
+      saveBtn.textContent = t("quiz.saved");
+      saveStatus.textContent = t("quiz.savedHint");
       if (typeof loadQuizList === "function") loadQuizList();
     } catch (error) {
-      saveStatus.textContent = "Не удалось связаться с сервером: " + error.message;
+      saveStatus.textContent = t("common.noServer", { message: error.message });
       saveBtn.disabled = false;
     }
   });
@@ -111,7 +111,7 @@ function renderQuiz(container, questions, options = {}) {
       explanation.innerHTML = "";
       if (chosen[i] !== null) {
         const verdict = document.createElement("strong");
-        verdict.textContent = chosen[i] === q.correct_index ? "Верно! " : "Неверно. ";
+        verdict.textContent = chosen[i] === q.correct_index ? t("quiz.correct") : t("quiz.wrong");
         explanation.appendChild(verdict);
         explanation.classList.add(chosen[i] === q.correct_index ? "is-ok" : "is-bad");
       }
@@ -170,20 +170,20 @@ function renderQuiz(container, questions, options = {}) {
     current = i;
     steps.forEach((s, k) => s.classList.toggle("is-current", k === i));
     result.classList.remove("is-current");
-    counter.textContent = "Вопрос " + (i + 1) + " из " + total;
+    counter.textContent = t("quiz.counter", { current: i + 1, total });
     progressFill.style.width = ((i + 1) / total) * 100 + "%";
     updateNav();
   }
   function updateNav() {
     if (assignment) return;
     const last = current === total - 1;
-    nextBtn.textContent = last ? "Показать результат" : "Следующий вопрос";
+    nextBtn.textContent = last ? t("quiz.showResult") : t("quiz.next");
     nextBtn.disabled = chosen[current] === null;
   }
   function showResult() {
     steps.forEach((s) => s.classList.remove("is-current"));
     result.classList.add("is-current");
-    counter.textContent = "Результат";
+    counter.textContent = t("quiz.result");
     progressFill.style.width = "100%";
     nextBtn.hidden = true;
   }
@@ -212,8 +212,8 @@ function renderQuiz(container, questions, options = {}) {
       }
     });
 
-    let text = "Результат: " + correctCount + " из " + total;
-    if (answered < total) text += " (без ответа: " + (total - answered) + ")";
+    let text = t("quiz.score", { correct: correctCount, total });
+    if (answered < total) text += t("quiz.unanswered", { count: total - answered });
     scoreBox.textContent = text;
     saveResult(correctCount, mistakes);
 
@@ -221,7 +221,7 @@ function renderQuiz(container, questions, options = {}) {
     // startReview объявлена в review.js
     if (mistakes.length > 0 && typeof startReview === "function") {
       const reviewBtn = document.createElement("button");
-      reviewBtn.textContent = "Разобрать ошибки";
+      reviewBtn.textContent = t("quiz.review");
       reviewBtn.addEventListener("click", () => startReview(mistakes, reviewBox, reviewBtn));
       actions.appendChild(reviewBtn);
     }
@@ -240,19 +240,19 @@ function renderQuiz(container, questions, options = {}) {
         mistakes: mistakes.slice(0, 30),
       });
       note.textContent = response.ok
-        ? "Результат сохранён в разделе «История»."
-        : "Результат не сохранён: " + (await readError(response));
+        ? t("quiz.resultSaved")
+        : t("quiz.resultNotSaved", { message: await readError(response) });
     } catch (error) {
-      note.textContent = "Результат не сохранён: нет связи с сервером.";
+      note.textContent = t("quiz.resultNoServer");
     }
     scoreBox.after(note);
   }
 
   if (assignment) {
     // Режим задания: все вопросы сразу (так их удобно печатать)
-    counter.textContent = "Вопросов: " + total;
+    counter.textContent = t("quiz.questionsCount", { count: total });
     const showBtn = document.createElement("button");
-    showBtn.textContent = "Показать ответы";
+    showBtn.textContent = t("quiz.showAnswers");
     showBtn.addEventListener("click", () => {
       reveals.forEach((reveal) => reveal());
       finish();
@@ -275,7 +275,7 @@ async function runQuiz(statusEl, container, button) {
   const materialText = material.value.trim();
 
   if (!activeDoc && !topic && !materialText) {
-    statusEl.textContent = "Введите тему, добавьте материал или выберите документ.";
+    statusEl.textContent = t("common.needSource");
     return null;
   }
   const docError = docParamsError();
@@ -285,7 +285,7 @@ async function runQuiz(statusEl, container, button) {
   }
 
   if (button) button.disabled = true;
-  statusEl.textContent = "Генерирую, подождите...";
+  statusEl.textContent = t("quiz.generating");
   container.innerHTML = "";
   let result = null;
 
@@ -293,21 +293,21 @@ async function runQuiz(statusEl, container, button) {
     const response = await apiFetch("/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, count, difficulty, material: activeDoc ? "" : materialText, ...docParams() }),
+      body: JSON.stringify({ topic, count, difficulty, material: activeDoc ? "" : materialText, ...docParams(), lang: getLang() }),
     });
     if (!response.ok) {
-      statusEl.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      statusEl.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
     } else {
       const data = await response.json();
       statusEl.textContent = quizSourceText(data);
       renderQuiz(container, data.questions, {
         assignment: $("assignment").checked,
-        meta: { topic: topic || (activeDoc ? activeDoc.title : "По материалу"), difficulty },
+        meta: { topic: topic || (activeDoc ? activeDoc.title : t("quiz.byMaterial")), difficulty },
       });
       result = data;
     }
   } catch (error) {
-    statusEl.textContent = "Не удалось связаться с сервером: " + error.message;
+    statusEl.textContent = t("common.noServer", { message: error.message });
   }
 
   if (button) button.disabled = false;
@@ -319,7 +319,7 @@ btn.addEventListener("click", () => runQuiz(message, quizBox, btn));
 // Подпись под кнопкой: пояснение сервера и страницы, по которым составлены вопросы
 function quizSourceText(data) {
   const parts = [];
-  if (data.note) parts.push(data.note);
-  if (data.sources && data.sources.length) parts.push("Вопросы по: " + formatSources(data.sources) + ".");
+  if (data.note) parts.push(noteText(data.note));
+  if (data.sources && data.sources.length) parts.push(t("quiz.sources", { pages: formatSources(data.sources) }));
   return parts.join(" ");
 }

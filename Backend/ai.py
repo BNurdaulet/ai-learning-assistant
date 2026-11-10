@@ -77,6 +77,27 @@ def ask_text(prompt, label):
     return run_with_fallback(label, [("Gemini", from_gemini), ("Groq", from_groq)])
 
 
+# Язык интерфейса -> как назвать его в промпте («пиши на … языке»)
+LANGUAGES = {
+    "ru": "русском языке",
+    "kk": "казахском языке (қазақ тілінде)",
+    "en": "английском языке (in English)",
+}
+
+
+def clean_lang(lang):
+    """Код языка из запроса: ru, kk или en (всё остальное — ru)."""
+    return lang if lang in LANGUAGES else "ru"
+
+
+def language_rule(lang):
+    """Инструкция о языке ответа для промптов квиза, карточек, конспекта и разбора ошибок."""
+    return (
+        f"Весь текст ответа пиши на {LANGUAGES[clean_lang(lang)]}, даже если тема или материал "
+        "на другом языке. Если тема — изучение иностранного языка, примеры на нём можно оставить."
+    )
+
+
 def describe_source(topic, material):
     """Кусок промпта «по теме …» / «по материалу ниже»."""
     if material:

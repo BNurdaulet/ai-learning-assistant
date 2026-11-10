@@ -17,7 +17,10 @@
 
   function apply(theme) {
     root.setAttribute("data-theme", theme);
-    const label = theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
+    const key = theme === "dark" ? "theme.toLight" : "theme.toDark";
+    // Словарь (i18n.js) может быть ещё не загружен — тогда русская подпись
+    const ready = typeof window.t === "function" && window.t(key) !== key;
+    const label = ready ? window.t(key) : theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
     document.querySelectorAll(".theme-toggle").forEach((button) => {
       button.setAttribute("aria-label", label);
       button.title = label;
@@ -30,6 +33,9 @@
   system.addEventListener("change", (e) => {
     if (!saved()) apply(e.matches ? "dark" : "light");
   });
+
+  // Язык сменился (i18n.js) — обновляем подписи кнопок
+  document.addEventListener("langchange", () => apply(root.getAttribute("data-theme")));
 
   document.addEventListener("DOMContentLoaded", () => {
     apply(root.getAttribute("data-theme"));

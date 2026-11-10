@@ -12,7 +12,7 @@ function renderStudy(container, kind, text, meta = {}) {
   head.className = "tool-head";
   const tag = document.createElement("span");
   tag.className = "tool-tag";
-  tag.textContent = (kind === "plan" ? "План" : "Конспект") + (meta.topic ? " · " + meta.topic : "");
+  tag.textContent = (kind === "plan" ? t("tool.plan") : t("tool.summary")) + (meta.topic ? " · " + meta.topic : "");
   head.appendChild(tag);
 
   const body = document.createElement("div");
@@ -24,7 +24,7 @@ function renderStudy(container, kind, text, meta = {}) {
   const copy = document.createElement("button");
   copy.type = "button";
   copy.className = "btn-soft";
-  copy.textContent = "Скопировать";
+  copy.textContent = t("study.copy");
   const copied = document.createElement("span");
   copied.className = "hint";
   copied.style.marginTop = "0";
@@ -42,7 +42,7 @@ function renderStudy(container, kind, text, meta = {}) {
       document.execCommand("copy");
       area.remove();
     }
-    copied.textContent = "Скопировано (Markdown)";
+    copied.textContent = t("study.copied");
   });
 
   box.append(head, body, row);
@@ -57,7 +57,7 @@ async function runStudy(kind, statusEl, container, buttons = []) {
   const materialText = material.value.trim();
 
   if (!activeDoc && !topic && !materialText) {
-    statusEl.textContent = "Введите тему, добавьте материал или выберите документ.";
+    statusEl.textContent = t("common.needSource");
     return null;
   }
   const docError = docParamsError();
@@ -67,26 +67,26 @@ async function runStudy(kind, statusEl, container, buttons = []) {
   }
 
   buttons.forEach((b) => (b.disabled = true));
-  statusEl.textContent = kind === "summary" ? "Пишу конспект, подождите..." : "Составляю план, подождите...";
-  if (activeDoc) statusEl.textContent += " Большой документ обрабатывается частями, это может занять минуту.";
+  statusEl.textContent = kind === "summary" ? t("study.writingSummary") : t("study.writingPlan");
+  if (activeDoc) statusEl.textContent += t("study.docSlow");
   let result = null;
 
   try {
     const response = await apiFetch("/study", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, topic, material: activeDoc ? "" : materialText, ...docParams() }),
+      body: JSON.stringify({ kind, topic, material: activeDoc ? "" : materialText, ...docParams(), lang: getLang() }),
     });
     if (!response.ok) {
-      statusEl.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      statusEl.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
     } else {
       const data = await response.json();
-      statusEl.textContent = data.note || "";
+      statusEl.textContent = noteText(data.note);
       renderStudy(container, kind, data.text, { topic: topic || (activeDoc ? activeDoc.title : "") });
       result = data;
     }
   } catch (error) {
-    statusEl.textContent = "Не удалось связаться с сервером: " + error.message;
+    statusEl.textContent = t("common.noServer", { message: error.message });
   }
 
   buttons.forEach((b) => (b.disabled = false));

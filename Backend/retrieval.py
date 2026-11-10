@@ -7,10 +7,9 @@
 
 Все запросы к базе идут с токеном пользователя (RLS), поэтому чужие части недоступны.
 """
-from fastapi import HTTPException
-
 import supabase_db as db
 from config import CHUNK_SIZE, MAX_CONTEXT_CHARS
+from errors import AppError, note
 
 MAX_QUERY_CHARS = 500
 # Примерно столько частей помещается в один запрос к ИИ (с запасом на метки страниц)
@@ -65,7 +64,7 @@ def clamp_pages(doc, page_from, page_to):
     """Проверяет диапазон страниц. Возвращает (от, до) в пределах документа."""
     pages = max(1, int(doc.get("pages") or 1))
     if page_from is None and page_to is None:
-        raise HTTPException(status_code=400, detail="Укажите страницы: с какой и по какую.")
+        raise AppError(400, "pages_required")
     start = page_from if page_from is not None else 1
     end = page_to if page_to is not None else pages
     if start > end:
@@ -152,29 +151,29 @@ def select_for_scope(user, doc, scope, topic, page_from, page_to, k):
     scope: "all" — равномерно по всему документу; "pages" — по диапазону страниц;
     "topic" — поиск по теме (если ничего не найдено — весь документ и пояснение в note).
     Возвращает словарь: chunks, total (частей в выбранной области), topic (тема для промпта или ""),
-    note (пояснение для пользователя или "")."""
+    note (список пояснений для пользователя {code, params}, может быть пустым)."""
     if scope not in SCOPES:
-        raise HTTPException(status_code=400, detail="Неизвестная область: нужна «all», «pages» или «topic».")
+        raise AppError(400, "unknown_scope")
 
     if scope == "pages":
         start, end = clamp_pages(doc, page_from, page_to)
         chunks, total = sample_range(user, doc, k, start, end)
         if not chunks:
-            raise HTTPException(status_code=422, detail=f"На страницах {start}–{end} нет текста.")
-        note = ""
+            raise AppError(422, "pages_no_text", start=start, end=end)
+        notes = []
         if (page_from, page_to) != (start, end):
-            note = f"Использованы страницы {start}–{end} (в документе {doc['pages']} стр.)."
-        return {"chunks": chunks, "total": total, "topic": "", "note": note}
+            notes.append(note("pages_used", start=start, end=end, pages=doc["pages"]))
+        return {"chunks": chunks, "total": total, "topic": "", "note": notes}
 
     if scope == "topic":
         if not topic:
-            raise HTTPException(status_code=400, detail="Укажите тему, которую искать в документе.")
+            raise AppError(400, "scope_topic_required")
         hits = search(user, doc["id"], topic, k)
         if hits:
-            return {"chunks": hits, "total": len(hits), "topic": topic, "note": ""}
+            return {"chunks": hits, "total": len(hits), "topic": topic, "note": []}
         chunks, total = sample_range(user, doc, k)
         return {"chunks": chunks, "total": total, "topic": "",
-                "note": f"По теме «{topic}» в документе ничего не найдено — использован весь документ."}
+                "note": [note("topic_not_found", topic=topic)]}
 
     chunks, total = sample_range(user, doc, k)
-    return {"chunks": chunks, "total": total, "topic": "", "note": ""}
+    return {"chunks": chunks, "total": total, "topic": "", "note": []}

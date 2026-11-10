@@ -6,7 +6,7 @@ async function startReview(mistakes, box, button) {
   box.innerHTML = "";
   const status = document.createElement("div");
   status.className = "hint";
-  status.textContent = "Разбираю ошибки, подождите...";
+  status.textContent = t("review.progress");
   box.appendChild(status);
 
   const sent = mistakes.slice(0, MAX_MISTAKES);
@@ -19,29 +19,30 @@ async function startReview(mistakes, box, button) {
         topic: $("topic").value.trim(),
         material: activeDoc ? "" : material.value.trim(),
         document_id: activeDoc ? activeDoc.id : null,
+        lang: getLang(),
       }),
     });
     if (!response.ok) {
-      status.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      status.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
       button.disabled = false;
       return;
     }
     const data = await response.json();
     status.remove();
     if (mistakes.length > sent.length) {
-      status.textContent = "Разобраны первые " + sent.length + " ошибок из " + mistakes.length + ".";
+      status.textContent = t("review.partial", { sent: sent.length, total: mistakes.length });
       box.appendChild(status);
     }
     renderReview(box, data);
   } catch (error) {
-    status.textContent = "Не удалось связаться с сервером: " + error.message;
+    status.textContent = t("common.noServer", { message: error.message });
     button.disabled = false;
   }
 }
 
 function renderReview(box, data) {
   const heading = document.createElement("h2");
-  heading.textContent = "Разбор ошибок";
+  heading.textContent = t("review.title");
   box.appendChild(heading);
 
   data.items.forEach((item, i) => {
@@ -57,8 +58,8 @@ function renderReview(box, data) {
 
     card.append(
       title,
-      richLine("Ваш ответ: ", item.chosen, "wrong-text"),
-      richLine("Правильный ответ: ", item.correct, "ok-text"),
+      richLine(t("review.yourAnswer"), item.chosen, "wrong-text"),
+      richLine(t("review.correctAnswer"), item.correct, "ok-text"),
     );
 
     const why = document.createElement("div");
@@ -66,7 +67,7 @@ function renderReview(box, data) {
     renderRich(why, item.why_wrong, false);
     card.appendChild(why);
 
-    if (item.concept) card.appendChild(richLine("Что повторить: ", item.concept, ""));
+    if (item.concept) card.appendChild(richLine(t("review.concept"), item.concept, ""));
     box.appendChild(card);
   });
 
@@ -74,7 +75,7 @@ function renderReview(box, data) {
     const card = document.createElement("div");
     card.className = "card";
     const title = document.createElement("h3");
-    title.textContent = "Темы для повторения";
+    title.textContent = t("review.topics");
     const list = document.createElement("ul");
     data.topics.forEach((t) => {
       const li = document.createElement("li");
@@ -87,13 +88,13 @@ function renderReview(box, data) {
 
   if (data.practice.length > 0) {
     const title = document.createElement("h2");
-    title.textContent = "Тренировка: похожие вопросы";
+    title.textContent = t("review.practice");
     const practiceBox = document.createElement("div");
     box.append(title, practiceBox);
     // Тот же квиз, что и основной: со счётом и повторным разбором ошибок
     renderQuiz(practiceBox, data.practice, {
       assignment: $("assignment").checked,
-      meta: { topic: "Тренировка: " + ($("topic").value.trim() || "по материалу"), difficulty: "" },
+      meta: { topic: t("review.practiceTopic", { topic: $("topic").value.trim() || t("review.byMaterial") }), difficulty: "" },
     });
   }
 }

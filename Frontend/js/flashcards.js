@@ -16,7 +16,7 @@ function renderFlashcards(container, list, meta = {}) {
   head.className = "tool-head";
   const tag = document.createElement("span");
   tag.className = "tool-tag";
-  tag.textContent = "Карточки" + (meta.topic ? " · " + meta.topic : "");
+  tag.textContent = t("tool.cards") + (meta.topic ? " · " + meta.topic : "");
   const counter = document.createElement("span");
   counter.className = "tool-counter";
   head.append(tag, counter);
@@ -25,7 +25,7 @@ function renderFlashcards(container, list, meta = {}) {
   flashcard.className = "flashcard";
   flashcard.tabIndex = 0;
   flashcard.setAttribute("role", "button");
-  flashcard.setAttribute("aria-label", "Перевернуть карточку");
+  flashcard.setAttribute("aria-label", t("cards.flip"));
   const inner = document.createElement("div");
   inner.className = "flashcard-inner";
   const front = document.createElement("div");
@@ -37,13 +37,13 @@ function renderFlashcards(container, list, meta = {}) {
 
   const hint = document.createElement("div");
   hint.className = "hint center";
-  hint.textContent = "Нажми на карточку, чтобы перевернуть";
+  hint.textContent = t("cards.flipHint");
 
   const nav = document.createElement("div");
   nav.className = "row fc-nav";
-  const prev = navButton("← Назад", "btn-soft");
-  const next = navButton("Вперёд →", "btn-primary");
-  const shuffle = navButton("Перемешать", "btn-soft");
+  const prev = navButton(t("cards.prev"), "btn-soft");
+  const next = navButton(t("cards.next"), "btn-primary");
+  const shuffle = navButton(t("cards.shuffle"), "btn-soft");
   nav.append(prev, shuffle, next);
 
   box.append(head, flashcard, hint, nav);
@@ -66,7 +66,7 @@ function renderFlashcards(container, list, meta = {}) {
     flashcard.classList.remove("instant");
     renderRich(front, card.front, false);
     renderRich(back, card.back, false);
-    counter.textContent = (cardIndex + 1) + " из " + cards.length;
+    counter.textContent = t("common.of", { current: cardIndex + 1, total: cards.length });
     prev.disabled = cardIndex === 0;
     next.disabled = cardIndex === cards.length - 1;
   }
@@ -116,7 +116,7 @@ async function runFlashcards(statusEl, container, button) {
   const count = Math.max(1, Math.min(30, Number($("fcCount").value) || 10));
 
   if (!activeDoc && !topic && !materialText) {
-    statusEl.textContent = "Введите тему, добавьте материал или выберите документ.";
+    statusEl.textContent = t("common.needSource");
     return null;
   }
   const docError = docParamsError();
@@ -127,26 +127,26 @@ async function runFlashcards(statusEl, container, button) {
 
   if (button) button.disabled = true;
   statusEl.textContent = activeDoc
-    ? "Создаю карточки по документу. Большой документ обрабатывается частями, это может занять минуту..."
-    : "Создаю карточки, подождите...";
+    ? t("cards.creatingDoc")
+    : t("cards.creating");
   let result = null;
 
   try {
     const response = await apiFetch("/flashcards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, count, material: activeDoc ? "" : materialText, ...docParams() }),
+      body: JSON.stringify({ topic, count, material: activeDoc ? "" : materialText, ...docParams(), lang: getLang() }),
     });
     if (!response.ok) {
-      statusEl.textContent = "Ошибка " + response.status + ": " + (await readError(response));
+      statusEl.textContent = t("common.errorStatus", { status: response.status, message: await readError(response) });
     } else {
       const data = await response.json();
-      statusEl.textContent = data.note || "";
+      statusEl.textContent = noteText(data.note);
       renderFlashcards(container, data.cards, { topic: topic || (activeDoc ? activeDoc.title : "") });
       result = data;
     }
   } catch (error) {
-    statusEl.textContent = "Не удалось связаться с сервером: " + error.message;
+    statusEl.textContent = t("common.noServer", { message: error.message });
   }
 
   if (button) button.disabled = false;

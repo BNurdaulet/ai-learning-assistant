@@ -12,6 +12,7 @@ import retrieval
 from ai import ask_text, material_block
 from config import MAX_CONTEXT_CHARS, MAX_MAPREDUCE_CALLS, MAX_TOPIC_CHARS
 from documents import get_ready_document
+from errors import note
 
 PARALLEL = 3
 
@@ -36,7 +37,7 @@ def _groups(chunks, size):
 
 def document_material(user, data):
     """Готовит материал для итогового запроса (конспект/план/карточки) по документу.
-    Возвращает словарь: topic, material, note, sources — или None, если ИИ не ответил."""
+    Возвращает словарь: topic, material, note (список {code, params}), sources — или None, если ИИ не ответил."""
     doc = get_ready_document(user, data.document_id)
     topic = data.topic.strip()[:MAX_TOPIC_CHARS]
     paged = retrieval.is_paged(doc)
@@ -45,15 +46,15 @@ def document_material(user, data):
     picked = retrieval.select_for_scope(
         user, doc, data.scope, topic, data.page_from, data.page_to, per_call * max_map_calls)
     chunks = picked["chunks"]
-    notes = [picked["note"]] if picked["note"] else []
+    notes = list(picked["note"])
     sources = retrieval.page_sources(chunks) if paged else []
 
     # Маленький документ (или узкая область): хватит одного запроса
     if len(chunks) <= per_call:
         material, used = retrieval.build_context(chunks, paged)
         if len(used) < picked["total"]:
-            notes.append(f"Документ большой: использована выборка — {len(used)} из {picked['total']} частей.")
-        return {"topic": picked["topic"], "material": material, "note": " ".join(notes),
+            notes.append(note("sample", used=len(used), total=picked["total"]))
+        return {"topic": picked["topic"], "material": material, "note": notes,
                 "sources": retrieval.page_sources(used) if paged else []}
 
     # map: заметки по каждой группе частей
@@ -78,8 +79,8 @@ def document_material(user, data):
         return None
 
     if len(parts) < len(groups):
-        notes.append(f"Часть документа обработать не удалось ({len(groups) - len(parts)} из {len(groups)} разделов).")
+        notes.append(note("partial_failure", failed=len(groups) - len(parts), total=len(groups)))
     used = sum(len(g) for g, t in zip(groups, results) if t)
     if used < picked["total"]:
-        notes.append(f"Документ большой: использована равномерная выборка — {used} из {picked['total']} частей.")
-    return {"topic": picked["topic"], "material": "\n\n".join(parts), "note": " ".join(notes), "sources": sources}
+        notes.append(note("sample_even", used=used, total=picked["total"]))
+    return {"topic": picked["topic"], "material": "\n\n".join(parts), "note": notes, "sources": sources}

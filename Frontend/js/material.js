@@ -2,8 +2,8 @@ const material = $("material");
 
 function updateMaterialInfo(extra) {
   const n = material.value.trim().length;
-  let text = n === 0 ? "Материал не добавлен." : "Материал: " + n + " символов.";
-  if (n > MAX_CHARS) text += " Будут использованы первые " + MAX_CHARS + ".";
+  let text = n === 0 ? t("material.none") : t("material.chars", { count: n });
+  if (n > MAX_CHARS) text += " " + t("material.firstChars", { max: MAX_CHARS });
   if (extra) text += " " + extra;
   $("materialInfo").textContent = text;
 }
@@ -18,7 +18,7 @@ $("clearMaterial").addEventListener("click", () => {
 $("file").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  $("materialInfo").textContent = "Читаю файл...";
+  $("materialInfo").textContent = t("material.reading");
 
   const form = new FormData();
   form.append("file", file);
@@ -26,14 +26,14 @@ $("file").addEventListener("change", async (e) => {
   try {
     const response = await apiFetch("/extract", { method: "POST", body: form });
     if (!response.ok) {
-      $("materialInfo").textContent = "Ошибка: " + (await readError(response));
+      $("materialInfo").textContent = t("common.error", { message: await readError(response) });
     } else {
       const data = await response.json();
       material.value = data.text;
-      updateMaterialInfo(data.truncated ? "Файл длинный, взята только первая часть." : "");
+      updateMaterialInfo(data.truncated ? t("material.fileTruncated") : "");
     }
   } catch (error) {
-    $("materialInfo").textContent = "Не удалось связаться с сервером: " + error.message;
+    $("materialInfo").textContent = t("common.noServer", { message: error.message });
   }
   e.target.value = "";
 });
@@ -67,13 +67,13 @@ $("photo").addEventListener("change", async (e) => {
   e.target.value = "";
   if (!files.length) return;
   if (files.length > MAX_PHOTOS) {
-    $("materialInfo").textContent = "За один раз можно добавить не больше " + MAX_PHOTOS + " фото.";
+    $("materialInfo").textContent = t("material.photoLimit", { max: MAX_PHOTOS });
     return;
   }
 
   const button = $("photoBtn");
   button.disabled = true;
-  $("materialInfo").textContent = "Распознаю текст на фото (" + files.length + ")...";
+  $("materialInfo").textContent = t("material.photoReading", { count: files.length });
 
   try {
     const form = new FormData();
@@ -82,15 +82,15 @@ $("photo").addEventListener("change", async (e) => {
     }
     const response = await apiFetch("/photo", { method: "POST", body: form });
     if (!response.ok) {
-      $("materialInfo").textContent = "Ошибка: " + (await readError(response));
+      $("materialInfo").textContent = t("common.error", { message: await readError(response) });
     } else {
       const data = await response.json();
       const current = material.value.trim();
       material.value = current ? current + "\n\n" + data.text : data.text;
-      updateMaterialInfo(data.truncated ? "Текста на фото много, взята только первая часть." : "Текст с фото добавлен.");
+      updateMaterialInfo(data.truncated ? t("material.photoTruncated") : t("material.photoAdded"));
     }
   } catch (error) {
-    $("materialInfo").textContent = "Не удалось связаться с сервером: " + error.message;
+    $("materialInfo").textContent = t("common.noServer", { message: error.message });
   } finally {
     button.disabled = false;
   }

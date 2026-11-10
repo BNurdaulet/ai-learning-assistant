@@ -9,6 +9,7 @@
 import httpx
 
 from config import SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY, SUPABASE_URL
+from errors import AppError
 
 http = httpx.Client(timeout=15)  # один клиент на всё приложение (в тестах подменяется)
 
@@ -18,10 +19,8 @@ SCHEMA_MISSING_CODES = {"PGRST205", "PGRST202", "42P01", "42883"}
 DOCUMENT_OBJECTS = {"documents", "chunks", "rpc search_chunks"}
 
 
-class DbError(Exception):
-    def __init__(self, status_code, detail):
-        self.status_code = status_code
-        self.detail = detail
+class DbError(AppError):
+    """Ошибка базы или Supabase Auth: код и параметры (текст — в словаре фронтенда)."""
 
 
 def _user_headers(token):
@@ -40,14 +39,14 @@ def _check(response, what):
     print(f"Supabase ({what}): ошибка {response.status_code}, код {code}")
     if code in SCHEMA_MISSING_CODES:
         script = "documents.sql" if what in DOCUMENT_OBJECTS else "schema.sql"
-        raise DbError(503, f"База данных не настроена: выполните supabase/{script} в Supabase (SQL Editor).")
+        raise DbError(503, "db_not_configured", script=script)
     if code == "P0001" and message == "documents_limit":
-        raise DbError(400, "Достигнут лимит документов. Удалите ненужный документ и попробуйте снова.")
+        raise DbError(400, "documents_limit_reached")
     if response.status_code == 401:
-        raise DbError(401, "Сессия истекла. Войдите снова.")
+        raise DbError(401, "session_expired")
     if response.status_code == 403:
-        raise DbError(403, "Нет доступа к этим данным.")
-    raise DbError(502, "Ошибка базы данных. Попробуйте позже.")
+        raise DbError(403, "db_forbidden")
+    raise DbError(502, "db_error")
 
 
 def rest(method, table, token, params=None, body=None, returning=False):
@@ -63,7 +62,7 @@ def rest(method, table, token, params=None, body=None, returning=False):
         )
     except httpx.HTTPError:
         print(f"Supabase ({table}): нет связи")
-        raise DbError(502, "Не удалось связаться с базой данных.")
+        raise DbError(502, "db_unreachable")
     _check(response, table)
     if response.status_code == 204 or not response.content:
         return []
@@ -79,7 +78,7 @@ def rpc(function, token, args=None):
         )
     except httpx.HTTPError:
         print(f"Supabase (rpc {function}): нет связи")
-        raise DbError(502, "Не удалось связаться с базой данных.")
+        raise DbError(502, "db_unreachable")
     _check(response, f"rpc {function}")
     return response.json()
 
@@ -90,7 +89,7 @@ def get_auth_user_id(token):
         response = http.get(f"{SUPABASE_URL}/auth/v1/user", headers=_user_headers(token))
     except httpx.HTTPError:
         print("Supabase Auth: нет связи")
-        raise DbError(503, "Не удалось проверить вход. Попробуйте позже.")
+        raise DbError(503, "auth_check_failed")
     if response.status_code != 200:
         return None
     return response.json().get("id")
@@ -118,8 +117,8 @@ def admin_delete_user(user_id):
         )
     except httpx.HTTPError:
         print("Supabase Auth (удаление): нет связи")
-        raise DbError(502, "Не удалось удалить учётную запись. Попробуйте позже.")
+        raise DbError(502, "account_delete_failed")
     if response.status_code not in (200, 204, 404):
         print(f"Supabase Auth (удаление): ошибка {response.status_code}")
-        raise DbError(502, "Не удалось удалить учётную запись. Попробуйте позже.")
+        raise DbError(502, "account_delete_failed")
     return True

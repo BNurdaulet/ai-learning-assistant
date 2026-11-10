@@ -91,14 +91,14 @@ let pendingName = null; // {name, before}: файл выбран, ждём, по
 document.addEventListener("change", (e) => {
   const input = e.target;
   if ((input.id === "file" || input.id === "photo") && input.files.length) {
-    const name = input.id === "file" ? input.files[0].name : "Фото конспекта";
+    const name = input.id === "file" ? input.files[0].name : t("material.photoName");
     pendingName = { name, before: $("material").value };
   }
 }, true);
 
 $("material").addEventListener("input", () => {
   pendingName = null;
-  if (!materialName) materialName = "свой текст";
+  if (!materialName) materialName = t("material.ownText");
   updateMaterialChip();
 });
 
@@ -112,17 +112,17 @@ function updateMaterialChip() {
 
   let label = "";
   if (typeof activeDoc !== "undefined" && activeDoc) label = activeDoc.title;
-  else if (text) label = materialName || "свой текст";
+  else if (text) label = materialName || t("material.ownText");
 
   $("materialChipName").textContent = label;
   $("materialChip").hidden = !label;
-  $("materialChip").title = label ? "Материал: " + label : "";
+  $("materialChip").title = label ? t("header.materialTitle", { name: label }) : "";
 }
 
 // Строка «Материал не добавлен.» под полем ввода не нужна — показываем только полезные статусы
 function syncMaterialStatus() {
   const info = $("materialInfo");
-  info.hidden = info.textContent.trim() === "Материал не добавлен.";
+  info.hidden = info.textContent.trim() === t("material.none");
   updateMaterialChip();
 }
 new MutationObserver(syncMaterialStatus)
@@ -133,11 +133,10 @@ new MutationObserver(updateMaterialChip)
   .observe($("activeDocTitle"), { childList: true, characterData: true, subtree: true });
 syncMaterialStatus();
 
-// На телефоне поле ввода в одну строку — подсказка короче
-const longPlaceholder = $("chatInput").placeholder;
+// На телефоне поле ввода в одну строку — подсказка короче (ключ запоминается: при смене языка обновится сам)
 const phone = window.matchMedia("(max-width: 700px)");
 function syncPlaceholder() {
-  $("chatInput").placeholder = phone.matches ? "Спроси или набери /" : longPlaceholder;
+  setI18n($("chatInput"), "placeholder", phone.matches ? "chat.placeholderShort" : "chat.placeholder");
 }
 phone.addEventListener("change", syncPlaceholder);
 syncPlaceholder();

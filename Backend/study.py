@@ -1,5 +1,5 @@
 """Краткий конспект и план изучения (ответ — Markdown-текст)."""
-from ai import ask_text, describe_source, material_block
+from ai import ask_text, describe_source, language_rule, material_block
 
 KINDS = {
     "summary": (
@@ -21,9 +21,9 @@ KINDS = {
 LABELS = {"summary": "Конспект", "plan": "План изучения"}
 
 
-def generate_study(kind, topic, material):
+def generate_study(kind, topic, material, lang="ru"):
     """kind: "summary" или "plan". Возвращает Markdown-строку или None."""
     prompt = KINDS[kind].format(source=describe_source(topic, material))
-    prompt += " Пиши на том же языке, на котором указана тема или написан материал."
+    prompt += " " + language_rule(lang)
     prompt += material_block(material)
     return ask_text(prompt, LABELS[kind])

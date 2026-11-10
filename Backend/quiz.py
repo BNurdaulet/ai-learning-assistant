@@ -3,12 +3,13 @@ import time
 
 from google.genai import types
 
+from ai import language_rule
 from config import GEMINI_MODEL, client
 from providers import groq_request, is_limit_error
 from schemas import Quiz
 
 
-def build_prompt(topic, count, difficulty, material):
+def build_prompt(topic, count, difficulty, material, lang="ru"):
     if material:
         subject = "по приведённому ниже материалу"
         if topic:
@@ -22,7 +23,7 @@ def build_prompt(topic, count, difficulty, material):
         "У каждого вопроса ровно 4 варианта ответа, правильный только один. "
         "В correct_index укажи номер правильного варианта (0, 1, 2 или 3). "
         "В explanation в одном-двух предложениях объясни, почему ответ верный. "
-        "Пиши на том же языке, на котором указана тема или написан материал."
+        + language_rule(lang)
     )
     if material:
         prompt += (
@@ -73,8 +74,8 @@ def clean_questions(questions):
     return result
 
 
-def generate_quiz(topic, count, difficulty, material):
-    prompt = build_prompt(topic, count, difficulty, material)
+def generate_quiz(topic, count, difficulty, material, lang="ru"):
+    prompt = build_prompt(topic, count, difficulty, material, lang)
 
     for name, ask in PROVIDERS:
         for attempt in range(1, 3):

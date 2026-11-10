@@ -1,18 +1,26 @@
-// Команды в поле ввода чата: /квиз, /карточки, /конспект, /план.
+// Команды в поле ввода чата: /квиз, /карточки, /конспект, /план (и их названия на казахском и английском).
 // Результат появляется в ленте как ответ ИИ. Сами запросы делают runQuiz (quiz.js),
 // runFlashcards (flashcards.js) и runStudy (study.js) — те же, что у отдельных разделов.
+// name — внутреннее имя (в data-cmd и в логике ниже), key — ключ в словаре (cmd.<key>.name / .hint),
+// aliases — как команду можно набрать на любом из трёх языков
 const COMMANDS = [
-  { name: "квиз", hint: "Тест с вариантами ответов" },
-  { name: "карточки", hint: "Запомнить термины и даты" },
-  { name: "конспект", hint: "Главное из темы коротко" },
-  { name: "план", hint: "План изучения темы" },
+  { name: "квиз", key: "quiz", aliases: ["квиз", "quiz", "тест", "test"] },
+  { name: "карточки", key: "cards", aliases: ["карточки", "cards", "flashcards", "карточкалар"] },
+  { name: "конспект", key: "summary", aliases: ["конспект", "summary"] },
+  { name: "план", key: "plan", aliases: ["план", "plan", "жоспар"] },
 ];
+
+// Название команды на языке интерфейса: «квиз» / «тест» / «quiz»
+function cmdLabel(cmd) {
+  return t("cmd." + cmd.key + ".name");
+}
 
 // «/квиз фотосинтез, 5 вопросов» -> {cmd, args: "фотосинтез, 5 вопросов"}; не команда -> null
 function parseCommand(text) {
   const m = text.match(/^\/(\S+)\s*([\s\S]*)$/);
   if (!m) return null;
-  const cmd = COMMANDS.find((c) => c.name === m[1].toLowerCase());
+  const word = m[1].toLowerCase();
+  const cmd = COMMANDS.find((c) => c.aliases.includes(word) || cmdLabel(c) === word);
   return cmd ? { cmd, args: m[2].trim() } : null;
 }
 
@@ -23,15 +31,16 @@ function parseCommandArgs(args) {
   let count = null;
   let difficulty = null;
 
-  const num = rest.match(/(\d{1,3})\s*(вопрос\S*|карточ\S*|шт\S*)?/i);
+  const num = rest.match(/(\d{1,3})\s*(вопрос\S*|карточ\S*|шт\S*|сұрақ\S*|question\S*|card\S*)?/i);
   if (num) {
     count = Number(num[1]);
     rest = rest.replace(num[0], " ");
   }
   const levels = [
-    [/(^|[\s,])(л[её]гк\S*)/i, "лёгкая"],
-    [/(^|[\s,])(средн\S*)/i, "средняя"],
-    [/(^|[\s,])(сложн\S*)/i, "сложная"],
+    // Значения — как в списке «Сложность» (они же уходят в промпт и сохраняются с квизом)
+    [/(^|[\s,])(л[её]гк\S*|жеңіл\S*|оңай\S*|easy)/i, "лёгкая"],
+    [/(^|[\s,])(средн\S*|орташа\S*|medium)/i, "средняя"],
+    [/(^|[\s,])(сложн\S*|қиын\S*|hard|difficult)/i, "сложная"],
   ];
   for (const [re, value] of levels) {
     const m = rest.match(re);
@@ -45,7 +54,8 @@ function parseCommandArgs(args) {
     .replace(/\s*,\s*(,\s*)*/g, ", ")
     .replace(/\s+/g, " ")
     .replace(/^[\s,;:.—-]+|[\s,;:—-]+$/g, "")
-    .replace(/^(по теме|на тему|по|про)\s+/i, "")
+    .replace(/^(по теме|на тему|по|про|about)\s+/i, "")
+    .replace(/\s+(тақырыбы бойынша|бойынша|туралы)$/i, "")
     .trim();
   return { count, difficulty, topic };
 }
@@ -66,7 +76,7 @@ function runCommand(text) {
   const userBubble = addBubble("user", "");
   const tag = document.createElement("span");
   tag.className = "cmd-tag";
-  tag.textContent = "/" + cmd.name;
+  tag.textContent = "/" + cmdLabel(cmd);
   userBubble.append(tag, args ? " " + args : "");
 
   // Ответ ИИ: строка статуса и место под карточку
@@ -79,16 +89,18 @@ function runCommand(text) {
   reply.append(status, box);
 
   if (!topic && !hasMaterial()) {
-    status.textContent = "Напиши тему после команды, например: «/" + cmd.name + " фотосинтез»"
-      + (cmd.name === "квиз" ? ", 5 вопросов" : "") + " — или прикрепи материал кнопкой «+» / «Файл».";
+    status.textContent = t("cmd.needTopic", {
+      name: cmdLabel(cmd),
+      extra: cmd.name === "квиз" ? t("cmd.quizExtra") : "",
+    });
     return true;
   }
 
   // Поля разделов, которые читают runQuiz / runFlashcards / runStudy
   $("topic").value = topic;
-  const source = topic ? "по теме «" + topic + "»"
-    : activeDoc ? "по документу «" + activeDoc.title + "»"
-    : "по твоему материалу";
+  const source = topic ? t("cmd.byTopic", { topic })
+    : activeDoc ? t("cmd.byDoc", { title: activeDoc.title })
+    : t("cmd.byMaterial");
 
   let job;
   if (cmd.name === "квиз") {
@@ -98,23 +110,23 @@ function runCommand(text) {
       if (!data) return;
       const extra = quizSourceText(data);
       status.textContent = $("assignment").checked
-        ? "Готово! Собрал квиз " + source + ". Ответы покажу, когда нажмёшь «Показать ответы»."
-        : "Готово! Собрал квиз " + source + ". Отвечай — если ошибёшься, сразу объясню.";
+        ? t("cmd.quizReadyAssignment", { source })
+        : t("cmd.quizReady", { source });
       if (extra) status.textContent += " " + extra;
     });
   } else if (cmd.name === "карточки") {
     $("fcCount").value = Math.max(1, Math.min(30, count || 10));
     job = runFlashcards(status, box, null).then((data) => {
       if (!data) return;
-      status.textContent = "Готово! Вот карточки " + source + ". Нажимай на карточку, чтобы увидеть ответ."
-        + (data.note ? " " + data.note : "");
+      status.textContent = t("cmd.cardsReady", { source })
+        + (data.note ? " " + noteText(data.note) : "");
     });
   } else {
     const kind = cmd.name === "план" ? "plan" : "summary";
     job = runStudy(kind, status, box).then((data) => {
       if (!data) return;
-      status.textContent = (kind === "plan" ? "Вот план изучения " : "Вот конспект ") + source + "."
-        + (data.note ? " " + data.note : "");
+      status.textContent = t(kind === "plan" ? "cmd.planReady" : "cmd.summaryReady", { source })
+        + (data.note ? " " + noteText(data.note) : "");
     });
   }
 
@@ -135,8 +147,10 @@ function startCommand(name) {
   fillCommand(name);
 }
 
+// name — внутреннее имя команды; в поле пишем её название на языке интерфейса
 function fillCommand(name) {
-  chatInput.value = "/" + name + " ";
+  const cmd = COMMANDS.find((c) => c.name === name);
+  chatInput.value = "/" + (cmd ? cmdLabel(cmd) : name) + " ";
   chatInput.focus();
   chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
   hideCmdMenu();
@@ -148,7 +162,8 @@ let cmdItems = [];
 let cmdActive = 0;
 
 function renderCmdMenu(prefix) {
-  cmdItems = COMMANDS.filter((c) => c.name.startsWith(prefix.toLowerCase()));
+  const p = prefix.toLowerCase();
+  cmdItems = COMMANDS.filter((c) => cmdLabel(c).startsWith(p) || c.aliases.some((a) => a.startsWith(p)));
   if (!cmdItems.length) return hideCmdMenu();
   cmdActive = Math.min(cmdActive, cmdItems.length - 1);
   cmdMenu.innerHTML = "";
@@ -159,9 +174,9 @@ function renderCmdMenu(prefix) {
     item.setAttribute("role", "option");
     item.setAttribute("aria-selected", String(i === cmdActive));
     const name = document.createElement("strong");
-    name.textContent = "/" + c.name;
+    name.textContent = "/" + cmdLabel(c);
     const hint = document.createElement("span");
-    hint.textContent = c.hint;
+    hint.textContent = t("cmd." + c.key + ".hint");
     item.append(name, hint);
     // mousedown, чтобы поле ввода не потеряло фокус до выбора
     item.addEventListener("mousedown", (e) => e.preventDefault());
@@ -216,7 +231,7 @@ document.querySelectorAll("[data-cmd-fill]").forEach((b) => {
 });
 document.querySelectorAll("[data-say]").forEach((b) => {
   b.addEventListener("click", () => {
-    chatInput.value = b.dataset.say;
+    chatInput.value = t(b.dataset.say); // в data-say — ключ словаря
     chatSend.click();
   });
 });

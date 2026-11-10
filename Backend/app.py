@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from auth import User, ai_limit, current_user
 from chat import build_document_system, build_system, generate_reply
+from errors import AppError
 from config import (
     CHAT_TOP_CHUNKS,
     MAX_FIELD_CHARS,
@@ -19,7 +20,7 @@ from config import (
     SUPABASE_ANON_KEY,
     SUPABASE_URL,
 )
-from files import FileError, extract_text
+from files import extract_text
 import vision
 from flashcards import generate_flashcards
 import documents
@@ -40,7 +41,6 @@ from schemas import (
     StudyRequest,
 )
 from study import KINDS, generate_study
-from supabase_db import DbError
 
 app = FastAPI(title="ИИ-помощник для обучения")
 
@@ -51,12 +51,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BUSY_MESSAGE = "Не удалось получить ответ ни от одного сервиса ИИ. Попробуйте позже."
+# Ошибки уходят кодом: {"detail": "file_too_large", "params": {...}}.
+# Текст на языке пользователя фронтенд берёт из словаря (Frontend/i18n, ключи errors.<код>).
+BUSY = "ai_busy"
 
 
-@app.exception_handler(DbError)
-def db_error(request: Request, e: DbError):
-    return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+@app.exception_handler(AppError)
+def app_error(request: Request, e: AppError):
+    return JSONResponse(status_code=e.status_code, content={"detail": e.code, "params": e.params})
 
 
 @app.get("/health")
@@ -68,32 +70,26 @@ def status():
 def public_config():
     """Публичные настройки для браузера. Секретный ключ сюда не попадает никогда."""
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        raise HTTPException(status_code=503, detail="Вход не настроен на сервере.")
+        raise AppError(503, "auth_not_configured")
     return {"supabase_url": SUPABASE_URL, "supabase_anon_key": SUPABASE_ANON_KEY}
 
 
 @app.post("/extract")
 async def extract(file: UploadFile = File(...), user: User = Depends(current_user)):
     data = await file.read()
-    try:
-        text, truncated, total = extract_text(file.filename, data)
-    except FileError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    text, truncated, total = extract_text(file.filename, data)
     return {"text": text, "truncated": truncated, "total_chars": total}
 
 
 @app.post("/photo")
 def photo(files: list[UploadFile] = File(...), user: User = Depends(ai_limit)):
     """Распознаёт текст с фотографий и возвращает его как материал."""
-    try:
-        images = vision.check_photos([(f.filename or "фото", f.file.read()) for f in files])
-    except FileError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    images = vision.check_photos([(f.filename or "photo", f.file.read()) for f in files])
     text = vision.photos_to_text(images)
     if text is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     if not text:
-        raise HTTPException(status_code=422, detail="На фото не удалось найти текст.")
+        raise AppError(422, "photo_no_text")
     return {"text": text[:MAX_MATERIAL_CHARS], "truncated": len(text) > MAX_MATERIAL_CHARS}
 
 
@@ -114,20 +110,20 @@ def generate(data: QuizRequest, user: User = Depends(ai_limit)):
     if data.document_id:
         count = max(1, min(data.count, 20))
         topic, material, note, sources = document_material(user, data)
-        questions = generate_quiz(topic, count, data.difficulty.strip()[:30], material)
+        questions = generate_quiz(topic, count, data.difficulty.strip()[:30], material, data.lang)
         if questions is None:
-            raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+            raise AppError(503, BUSY)
         return {"questions": questions, "note": note, "sources": sources}
 
     topic = data.topic.strip()
     material = data.material.strip()[:MAX_MATERIAL_CHARS]
     if not topic and not material:
-        raise HTTPException(status_code=400, detail="Укажите тему или добавьте материал.")
+        raise AppError(400, "topic_or_material_required")
 
     count = max(1, min(data.count, 20))
-    questions = generate_quiz(topic, count, data.difficulty, material)
+    questions = generate_quiz(topic, count, data.difficulty, material, data.lang)
     if questions is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     return {"questions": questions}
 
 
@@ -142,15 +138,15 @@ def chat(data: ChatRequest, user: User = Depends(ai_limit)):
     while messages and messages[0].role != "user":
         messages.pop(0)
     if not messages or messages[-1].role != "user":
-        raise HTTPException(status_code=400, detail="Нужно сообщение пользователя.")
+        raise AppError(400, "user_message_required")
 
     if data.document_id:
         return chat_with_document(data, messages, user)
 
-    system = build_system(data.style, data.material.strip()[:MAX_MATERIAL_CHARS])
+    system = build_system(data.style, data.material.strip()[:MAX_MATERIAL_CHARS], data.lang)
     result = generate_reply(messages, system)
     if result is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
 
     reply, provider = result
     return {"reply": reply, "provider": provider}
@@ -167,9 +163,9 @@ def chat_with_document(data, messages, user):
     paged = retrieval.is_paged(doc)
     context, used = retrieval.build_context(hits, paged)
 
-    result = generate_reply(messages, build_document_system(data.style, context, paged))
+    result = generate_reply(messages, build_document_system(data.style, context, paged, data.lang))
     if result is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     reply, provider = result
     return {
         "reply": reply,
@@ -184,7 +180,7 @@ def clean_source(topic, material, required=True):
     topic = topic.strip()[:MAX_TOPIC_CHARS]
     material = material.strip()[:MAX_MATERIAL_CHARS]
     if required and not topic and not material:
-        raise HTTPException(status_code=400, detail="Укажите тему или добавьте материал.")
+        raise AppError(400, "topic_or_material_required")
     return topic, material
 
 
@@ -203,7 +199,7 @@ def review(data: ReviewRequest, user: User = Depends(ai_limit)):
             "explanation": m.explanation.strip()[:MAX_FIELD_CHARS],
         }))
     if not mistakes:
-        raise HTTPException(status_code=400, detail="Нет ошибок для разбора.")
+        raise AppError(400, "no_mistakes")
     mistakes = mistakes[:MAX_MISTAKES]
 
     topic, material = clean_source(data.topic, data.material, required=False)
@@ -213,9 +209,9 @@ def review(data: ReviewRequest, user: User = Depends(ai_limit)):
         query = " ".join(f"{m.question} {m.correct}" for m in mistakes)
         hits = retrieval.search(user, doc["id"], query, CHAT_TOP_CHUNKS)
         material, _ = retrieval.build_context(hits, retrieval.is_paged(doc))
-    result = review_mistakes(mistakes, topic, material)
+    result = review_mistakes(mistakes, topic, material, data.lang)
     if result is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     return result
 
 
@@ -223,7 +219,7 @@ def document_digest(user, data):
     """Материал из большого документа (map-reduce, см. mapreduce.py)."""
     digest = mapreduce.document_material(user, data)
     if digest is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     return digest
 
 
@@ -232,33 +228,33 @@ def flashcards(data: FlashcardsRequest, user: User = Depends(ai_limit)):
     count = max(1, min(data.count, MAX_FLASHCARDS))
     if data.document_id:
         digest = document_digest(user, data)
-        cards = generate_flashcards(digest["topic"], count, digest["material"])
+        cards = generate_flashcards(digest["topic"], count, digest["material"], data.lang)
         if cards is None:
-            raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+            raise AppError(503, BUSY)
         return {"cards": cards, "note": digest["note"], "sources": digest["sources"]}
 
     topic, material = clean_source(data.topic, data.material)
-    cards = generate_flashcards(topic, count, material)
+    cards = generate_flashcards(topic, count, material, data.lang)
     if cards is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     return {"cards": cards}
 
 
 @app.post("/study")
 def study(data: StudyRequest, user: User = Depends(ai_limit)):
     if data.kind not in KINDS:
-        raise HTTPException(status_code=400, detail="Неизвестный тип: нужен «summary» или «plan».")
+        raise AppError(400, "unknown_study_kind")
     if data.document_id:
         digest = document_digest(user, data)
-        text = generate_study(data.kind, digest["topic"], digest["material"])
+        text = generate_study(data.kind, digest["topic"], digest["material"], data.lang)
         if text is None:
-            raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+            raise AppError(503, BUSY)
         return {"text": text, "note": digest["note"], "sources": digest["sources"]}
 
     topic, material = clean_source(data.topic, data.material)
-    text = generate_study(data.kind, topic, material)
+    text = generate_study(data.kind, topic, material, data.lang)
     if text is None:
-        raise HTTPException(status_code=503, detail=BUSY_MESSAGE)
+        raise AppError(503, BUSY)
     return {"text": text}
 
 

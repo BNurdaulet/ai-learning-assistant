@@ -12,7 +12,12 @@ class Quiz(BaseModel):
     questions: list[QuizQuestion]
 
 
-class DocumentScope(BaseModel):
+class Lang(BaseModel):
+    """Язык интерфейса (ru, kk, en): на нём ИИ пишет ответ. Неизвестный код = ru (см. ai.clean_lang)."""
+    lang: str = "ru"
+
+
+class DocumentScope(Lang):
     """Необязательная работа по загруженному документу (вместо поля material).
     scope: "all" — весь документ, "pages" — страницы page_from–page_to, "topic" — поиск по теме."""
     document_id: str | None = None
@@ -33,7 +38,7 @@ class ChatMessage(BaseModel):
     content: str
 
 
-class ChatRequest(BaseModel):
+class ChatRequest(Lang):
     messages: list[ChatMessage]
     material: str = ""
     style: str = "tutor"
@@ -50,7 +55,7 @@ class Mistake(BaseModel):
     explanation: str = ""
 
 
-class ReviewRequest(BaseModel):
+class ReviewRequest(Lang):
     mistakes: list[Mistake]
     topic: str = ""
     material: str = ""

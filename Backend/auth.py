@@ -12,10 +12,11 @@ import uuid
 from dataclasses import dataclass
 
 import jwt
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header
 
 import supabase_db
 from config import DAILY_AI_LIMIT, SUPABASE_ANON_KEY, SUPABASE_URL
+from errors import AppError
 
 JWKS_TTL = 600          # держим публичные ключи 10 минут (как кэш у Supabase)
 JWKS_MIN_REFRESH = 60   # при незнакомом kid обновляем ключи не чаще раза в минуту
@@ -24,9 +25,10 @@ REMOTE_TTL = 60         # сколько помним ответ Supabase Auth �
 _jwks = {"keys": None, "loaded": 0.0}
 _remote_cache = {}  # sha256(токена) -> (user_id, когда забыть)
 
-NOT_LOGGED_IN = "Войдите в аккаунт."
-BAD_TOKEN = "Сессия недействительна. Войдите снова."
-EXPIRED = "Сессия истекла. Войдите снова."
+# Коды ошибок входа (тексты — в словаре фронтенда, errors.<код>)
+NOT_LOGGED_IN = "login_required"
+BAD_TOKEN = "session_invalid"
+EXPIRED = "session_expired"
 
 
 @dataclass
@@ -61,7 +63,7 @@ def _find_key(kid):
 def _verify_local(token, header):
     key = _find_key(header.get("kid"))
     if key is None:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
     try:
         claims = jwt.decode(
             token,
@@ -72,9 +74,9 @@ def _verify_local(token, header):
             options={"require": ["exp", "sub", "aud", "iss"]},
         )
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail=EXPIRED)
+        raise AppError(401, EXPIRED)
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
     return claims["sub"]
 
 
@@ -84,12 +86,9 @@ def _verify_remote(token):
     cached = _remote_cache.get(digest)
     if cached and cached[1] > now:
         return cached[0]
-    try:
-        user_id = supabase_db.get_auth_user_id(token)
-    except supabase_db.DbError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    user_id = supabase_db.get_auth_user_id(token)  # DbError уходит пользователю как есть
     if not user_id:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
     if len(_remote_cache) > 1000:
         _remote_cache.clear()
     _remote_cache[digest] = (user_id, now + REMOTE_TTL)
@@ -97,11 +96,11 @@ def _verify_remote(token):
 
 
 def verify_token(token):
-    """Возвращает id пользователя или бросает HTTPException 401."""
+    """Возвращает id пользователя или бросает AppError 401."""
     try:
         header = jwt.get_unverified_header(token)
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
 
     alg = header.get("alg")
     if alg in ("ES256", "RS256"):
@@ -109,35 +108,29 @@ def verify_token(token):
     elif alg == "HS256":
         user_id = _verify_remote(token)
     else:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
 
     try:
         return str(uuid.UUID(str(user_id)))
     except ValueError:
-        raise HTTPException(status_code=401, detail=BAD_TOKEN)
+        raise AppError(401, BAD_TOKEN)
 
 
 def current_user(authorization: str | None = Header(default=None)) -> User:
     """Зависимость FastAPI: пускает только вошедших пользователей."""
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        raise HTTPException(status_code=503, detail="Вход не настроен на сервере.")
+        raise AppError(503, "auth_not_configured")
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail=NOT_LOGGED_IN)
+        raise AppError(401, NOT_LOGGED_IN)
     token = authorization[len("Bearer "):].strip()
     if not token or len(token) > 8192:
-        raise HTTPException(status_code=401, detail=NOT_LOGGED_IN)
+        raise AppError(401, NOT_LOGGED_IN)
     return User(id=verify_token(token), token=token)
 
 
 def ai_limit(user: User = Depends(current_user)) -> User:
     """Зависимость для маршрутов с ИИ: считает запросы пользователя за сегодня."""
-    try:
-        used = supabase_db.rpc("bump_ai_usage", user.token)
-    except supabase_db.DbError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    used = supabase_db.rpc("bump_ai_usage", user.token)
     if not isinstance(used, int) or used > DAILY_AI_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Дневной лимит запросов к ИИ исчерпан ({DAILY_AI_LIMIT} в сутки). Попробуйте завтра.",
-        )
+        raise AppError(429, "ai_daily_limit", limit=DAILY_AI_LIMIT)
     return user

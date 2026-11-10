@@ -4,36 +4,39 @@ let authMode = "login"; // "login" или "register"
 let currentUserId = null;
 const authMsg = $("authMessage");
 
-const AUTH_ERRORS = {
-  invalid_credentials: "Неверный email или пароль.",
-  email_not_confirmed: "Email не подтверждён. Откройте письмо и перейдите по ссылке.",
-  user_already_exists: "Пользователь с таким email уже зарегистрирован.",
-  email_exists: "Пользователь с таким email уже зарегистрирован.",
-  weak_password: "Слишком простой пароль. Используйте не меньше 8 символов, буквы и цифры.",
-  same_password: "Новый пароль должен отличаться от старого.",
-  email_address_invalid: "Некорректный email.",
-  validation_failed: "Проверьте правильность email и пароля.",
-  over_email_send_rate_limit: "Слишком много писем. Подождите немного и попробуйте снова.",
-  over_request_rate_limit: "Слишком много попыток. Подождите немного и попробуйте снова.",
-  signup_disabled: "Регистрация сейчас отключена.",
-  otp_expired: "Ссылка из письма устарела или уже использована. Запросите новую.",
-};
+// Коды ошибок Supabase Auth, для которых есть текст в словаре (errors.*)
+const AUTH_ERRORS = [
+  "invalid_credentials", "email_not_confirmed", "user_already_exists", "email_exists",
+  "weak_password", "same_password", "email_address_invalid", "validation_failed",
+  "over_email_send_rate_limit", "over_request_rate_limit", "signup_disabled", "otp_expired",
+];
 
-function authErrorText(error) {
-  if (!error) return "";
-  if (AUTH_ERRORS[error.code]) return AUTH_ERRORS[error.code];
-  if (error.status === 429) return AUTH_ERRORS.over_request_rate_limit;
-  if (error.name === "AuthRetryableFetchError") return "Нет связи с сервером входа. Проверьте интернет.";
-  return "Ошибка входа: " + (error.message || "неизвестная ошибка");
+// Сообщение на экране входа: ключ словаря и параметры (текст обновится при смене языка)
+function authSay(key, params) {
+  setText(authMsg, key || "", params);
 }
 
-// Показывает экран входа и прячет приложение
-function showAuth(text) {
+// Ошибка Supabase -> [ключ, параметры]
+function authError(error) {
+  if (AUTH_ERRORS.includes(error.code)) return ["errors." + error.code];
+  if (error.status === 429) return ["errors.over_request_rate_limit"];
+  if (error.name === "AuthRetryableFetchError") return ["auth.noConnection"];
+  return error.message
+    ? ["auth.errorGeneric", { message: error.message }]
+    : ["auth.errorGeneric", { message: t("auth.unknownError") }];
+}
+
+function authSayError(error) {
+  authSay(...authError(error));
+}
+
+// Показывает экран входа и прячет приложение. key — ключ сообщения из словаря (или пусто)
+function showAuth(key, params) {
   $("app").hidden = true;
   $("authScreen").hidden = false;
   $("resetForm").hidden = true;
   $("authForm").hidden = false;
-  authMsg.textContent = text || "";
+  authSay(key, params);
 }
 
 function showApp(session) {
@@ -52,9 +55,9 @@ function setAuthMode(mode) {
   $("authModeLogin").classList.toggle("active", !register);
   $("authModeRegister").classList.toggle("active", register);
   $("registerOnly").hidden = !register;
-  $("authSubmit").textContent = register ? "Зарегистрироваться" : "Войти";
+  setText($("authSubmit"), register ? "register.submit" : "login.submit");
   $("authPassword").autocomplete = register ? "new-password" : "current-password";
-  authMsg.textContent = "";
+  authSay("");
 }
 
 // Адрес, куда Supabase вернёт пользователя из письма (эта же страница)
@@ -68,7 +71,7 @@ function readUrlError() {
   const code = params.get("error_code") || params.get("error");
   if (!code) return "";
   window.history.replaceState(null, "", redirectUrl());
-  return AUTH_ERRORS[code] || "Не удалось подтвердить ссылку из письма. Попробуйте ещё раз.";
+  return AUTH_ERRORS.includes(code) ? "errors." + code : "auth.linkFailed";
 }
 
 async function initAuth() {
@@ -82,7 +85,7 @@ async function initAuth() {
     });
   } catch (error) {
     resolveAuthReady();
-    showAuth("Вход недоступен: " + error.message);
+    showAuth("auth.unavailable", { error: error.message });
     $("authSubmit").disabled = true;
     return;
   }
@@ -94,7 +97,7 @@ async function initAuth() {
       $("authScreen").hidden = false;
       $("authForm").hidden = true;
       $("resetForm").hidden = false;
-      authMsg.textContent = "Придумайте новый пароль.";
+      authSay("auth.newPasswordPrompt");
       return;
     }
     if (event === "SIGNED_OUT") {
@@ -126,27 +129,27 @@ $("authForm").addEventListener("submit", async (e) => {
   const password = $("authPassword").value;
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    authMsg.textContent = "Введите корректный email.";
+    authSay("auth.invalidEmail");
     return;
   }
   if (password.length < 8) {
-    authMsg.textContent = "Пароль должен быть не короче 8 символов.";
+    authSay("auth.passwordShort");
     return;
   }
 
   if (authMode === "register") {
     if (password !== $("authPassword2").value) {
-      authMsg.textContent = "Пароли не совпадают.";
+      authSay("auth.passwordsMismatch");
       return;
     }
     if (!$("authConsent").checked) {
-      authMsg.textContent = "Чтобы зарегистрироваться, отметьте согласие с политикой конфиденциальности.";
+      authSay("auth.consentRequired");
       return;
     }
   }
 
   $("authSubmit").disabled = true;
-  authMsg.textContent = "Подождите...";
+  authSay("auth.wait");
 
   if (authMode === "register") {
     const { data, error } = await sb.auth.signUp({
@@ -155,15 +158,15 @@ $("authForm").addEventListener("submit", async (e) => {
       options: { emailRedirectTo: redirectUrl() },
     });
     if (error) {
-      authMsg.textContent = authErrorText(error);
+      authSayError(error);
     } else if (!data.session) {
       // Нужно подтверждение почты. Не говорим, существует ли уже такой адрес.
       setAuthMode("login");
-      authMsg.textContent = "Письмо отправлено на " + email + ". Подтвердите адрес по ссылке, затем войдите.";
+      authSay("auth.emailSent", { email });
     }
   } else {
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) authMsg.textContent = authErrorText(error);
+    if (error) authSayError(error);
   }
 
   $("authPassword").value = "";
@@ -175,27 +178,26 @@ $("authForgot").addEventListener("click", async () => {
   if (!sb) return;
   const email = $("authEmail").value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    authMsg.textContent = "Введите email в поле выше, и мы пришлём ссылку для сброса пароля.";
+    authSay("auth.forgotNeedEmail");
     return;
   }
-  authMsg.textContent = "Отправляю письмо...";
+  authSay("auth.sending");
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() });
-  authMsg.textContent = error
-    ? authErrorText(error)
-    : "Если такой адрес зарегистрирован, на него придёт письмо со ссылкой для сброса пароля.";
+  if (error) authSayError(error);
+  else authSay("auth.resetSent");
 });
 
 $("resetForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const password = $("resetPassword").value;
   if (password.length < 8) {
-    authMsg.textContent = "Пароль должен быть не короче 8 символов.";
+    authSay("auth.passwordShort");
     return;
   }
   const { error } = await sb.auth.updateUser({ password });
   $("resetPassword").value = "";
   if (error) {
-    authMsg.textContent = authErrorText(error);
+    authSayError(error);
     return;
   }
   $("resetForm").hidden = true;
@@ -203,7 +205,7 @@ $("resetForm").addEventListener("submit", async (e) => {
   window.history.replaceState(null, "", redirectUrl());
   const { data: sessionData } = await sb.auth.getSession();
   if (sessionData.session) showApp(sessionData.session);
-  else showAuth("Пароль изменён. Войдите с новым паролем.");
+  else showAuth("auth.passwordChanged");
 });
 
 $("logoutBtn").addEventListener("click", async () => {

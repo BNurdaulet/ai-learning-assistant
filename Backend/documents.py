@@ -7,8 +7,6 @@
 import os
 import re
 
-from fastapi import HTTPException
-
 import supabase_db as db
 from chunking import chunk_pages, clean_page
 from config import (
@@ -20,15 +18,12 @@ from config import (
     MAX_PAGES,
     MAX_TOTAL_DOC_CHARS,
 )
-from files import FileError, read_pages
+from errors import AppError, note
+from files import read_pages
 from userdata import NOT_FOUND, parse_id
 
 INSERT_BATCH = 100   # сколько частей отправляем в базу за один запрос
 DOC_FIELDS = "id,title,filename,pages,chars,chunk_count,created_at"
-
-
-def _fmt(n):
-    return f"{n:,}".replace(",", " ")
 
 
 def clean_filename(filename):
@@ -62,32 +57,25 @@ def upload_document(user, filename, fileobj):
     """Читает файл, режет на части и сохраняет. Возвращает краткие сведения о документе."""
     filename = clean_filename(filename)
     if not filename.lower().endswith((".pdf", ".txt", ".md")):
-        raise HTTPException(status_code=400, detail="Поддерживаются только PDF, TXT и MD.")
+        raise AppError(400, "unsupported_file_type")
     if file_size(fileobj) > MAX_DOC_UPLOAD_BYTES:
-        raise HTTPException(status_code=413,
-                            detail=f"Файл слишком большой (максимум {MAX_DOC_UPLOAD_BYTES // (1024 * 1024)} МБ).")
+        raise AppError(413, "file_too_large", max_mb=MAX_DOC_UPLOAD_BYTES // (1024 * 1024))
 
     count, used_chars = _usage(user)
     if count >= MAX_DOCUMENTS:
-        raise HTTPException(status_code=400, detail=(
-            f"Достигнут лимит: {count} из {MAX_DOCUMENTS} документов. Удалите ненужный и попробуйте снова."))
+        raise AppError(400, "documents_limit", count=count, max=MAX_DOCUMENTS)
 
-    try:
-        pages, page_count, empty_pages = read_pages(filename, fileobj, MAX_PAGES, MAX_DOC_CHARS)
-    except FileError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+    pages, page_count, empty_pages = read_pages(filename, fileobj, MAX_PAGES, MAX_DOC_CHARS)
 
     chars = sum(len(clean_page(p)) for p in pages)
     if used_chars + chars > MAX_TOTAL_DOC_CHARS:
         free = max(0, MAX_TOTAL_DOC_CHARS - used_chars)
-        raise HTTPException(status_code=413, detail=(
-            f"Не хватает места: в документе {_fmt(chars)} символов, а свободно {_fmt(free)} "
-            f"из {_fmt(MAX_TOTAL_DOC_CHARS)}. Удалите ненужные документы."))
+        raise AppError(413, "storage_full", chars=chars, free=free, total=MAX_TOTAL_DOC_CHARS)
 
     chunks = chunk_pages(pages, CHUNK_SIZE, CHUNK_OVERLAP)
     del pages  # текст страниц больше не нужен, освобождаем память
     if not chunks:
-        raise HTTPException(status_code=422, detail="В файле не найден текст.")
+        raise AppError(422, "document_no_text")
 
     doc = db.rest("POST", "documents", user.token, body={
         "user_id": user.id,
@@ -126,9 +114,7 @@ def upload_document(user, filename, fileobj):
         "created_at": doc.get("created_at"),
     }
     if empty_pages and page_count > 1:
-        result["warning"] = (
-            f"На {empty_pages} из {page_count} страниц не найден текст (возможно, это сканы или картинки) — "
-            "они пропущены.")
+        result["warning"] = note("empty_pages_skipped", empty=empty_pages, pages=page_count)
     return result
 
 
@@ -148,7 +134,7 @@ def get_document(user, document_id):
         "select": DOC_FIELDS,
     })
     if not rows:
-        raise HTTPException(status_code=404, detail="Документ не найден. Возможно, он удалён.")
+        raise AppError(404, "document_not_found")
     return rows[0]
 
 
@@ -156,8 +142,7 @@ def get_ready_document(user, document_id):
     """Документ, по которому можно работать (все части загружены)."""
     doc = get_document(user, document_id)
     if not doc.get("chunk_count"):
-        raise HTTPException(status_code=409, detail=(
-            "Документ загружен не полностью. Удалите его и загрузите снова."))
+        raise AppError(409, "document_incomplete")
     return doc
 
 
@@ -168,5 +153,5 @@ def delete_document(user, document_id):
         "select": "id",
     }, returning=True)
     if not rows:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
     return {"deleted": True}

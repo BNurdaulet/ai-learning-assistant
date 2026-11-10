@@ -6,8 +6,6 @@
 """
 import uuid
 
-from fastapi import HTTPException
-
 import supabase_db as db
 from config import (
     MAX_CHAT_MESSAGES,
@@ -18,8 +16,9 @@ from config import (
     MAX_SAVED_QUESTIONS,
     MAX_TOPIC_CHARS,
 )
+from errors import AppError
 
-NOT_FOUND = "Не найдено."
+NOT_FOUND = "not_found"
 
 
 def parse_id(value):
@@ -27,7 +26,7 @@ def parse_id(value):
     try:
         return str(uuid.UUID(str(value)))
     except ValueError:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
 
 
 def clean_question(q):
@@ -35,9 +34,9 @@ def clean_question(q):
     options = [o.strip()[:MAX_OPTION_CHARS] for o in q.options]
     question = q.question.strip()[:MAX_FIELD_CHARS]
     if not question or not (2 <= len(options) <= 6) or not all(options):
-        raise HTTPException(status_code=400, detail="Некорректный вопрос в квизе.")
+        raise AppError(400, "invalid_question")
     if not (0 <= q.correct_index < len(options)):
-        raise HTTPException(status_code=400, detail="Некорректный номер правильного ответа.")
+        raise AppError(400, "invalid_correct_index")
     return {
         "question": question,
         "options": options,
@@ -50,11 +49,9 @@ def clean_question(q):
 
 def save_quiz(user, data):
     if not data.questions:
-        raise HTTPException(status_code=400, detail="В квизе нет вопросов.")
+        raise AppError(400, "quiz_empty")
     if len(data.questions) > MAX_SAVED_QUESTIONS:
-        raise HTTPException(
-            status_code=400, detail=f"Слишком много вопросов (максимум {MAX_SAVED_QUESTIONS})."
-        )
+        raise AppError(400, "too_many_questions", max=MAX_SAVED_QUESTIONS)
     row = {
         "user_id": user.id,
         "topic": data.topic.strip()[:MAX_TOPIC_CHARS],
@@ -82,7 +79,7 @@ def get_quiz(user, quiz_id):
         "user_id": f"eq.{user.id}",
     })
     if not rows:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
     return rows[0]
 
 
@@ -93,7 +90,7 @@ def delete_quiz(user, quiz_id):
         "select": "id",
     }, returning=True)
     if not rows:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
     return {"deleted": True}
 
 
@@ -111,7 +108,7 @@ def clean_mistake(m):
 
 def save_result(user, data):
     if not (1 <= data.total <= MAX_SAVED_QUESTIONS) or not (0 <= data.score <= data.total):
-        raise HTTPException(status_code=400, detail="Некорректный результат.")
+        raise AppError(400, "invalid_result")
     mistakes = [clean_mistake(m) for m in data.mistakes[:MAX_SAVED_QUESTIONS] if m.question.strip()]
     row = {
         "user_id": user.id,
@@ -169,7 +166,7 @@ def get_chat(user, session_id):
         "user_id": f"eq.{user.id}",
     })
     if not sessions:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
     messages = db.rest("GET", "chat_messages", user.token, params={
         "select": "role,content,created_at",
         "session_id": f"eq.{session_id}",
@@ -193,13 +190,13 @@ def save_messages(user, session_id, data):
         if m.role in ("user", "assistant") and m.content.strip()
     ]
     if not rows:
-        raise HTTPException(status_code=400, detail="Нет сообщений для сохранения.")
+        raise AppError(400, "no_messages")
     # Чужая или несуществующая сессия: база (RLS) не даст вставить -> 403. Отвечаем 404.
     try:
         db.rest("POST", "chat_messages", user.token, body=rows)
     except db.DbError as e:
         if e.status_code == 403:
-            raise HTTPException(status_code=404, detail=NOT_FOUND)
+            raise AppError(404, NOT_FOUND)
         raise
     return {"saved": len(rows)}
 
@@ -211,7 +208,7 @@ def delete_chat(user, session_id):
         "select": "id",
     }, returning=True)
     if not rows:
-        raise HTTPException(status_code=404, detail=NOT_FOUND)
+        raise AppError(404, NOT_FOUND)
     return {"deleted": True}
 
 

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/theme.js"></script>
+  <script src="js/i18n.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 </head>
 <body>
@@ -16,13 +17,13 @@
   <div id="authScreen" class="auth-screen" hidden>
     <!-- Слева (только ПК): фиолетовый блок -->
     <aside class="auth-promo" aria-hidden="true">
-      <div class="logo logo-on-primary"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span>ИИ-помощник</div>
-      <div class="auth-promo-title">Учись быстрее <span class="tag-lime">с ИИ</span></div>
-      <p class="auth-promo-text">Загрузи свой материал — и получи квиз, карточки или конспект за пару секунд.</p>
+      <div class="logo logo-on-primary" data-i18n="app.logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span>ИИ-помощник</div>
+      <div class="auth-promo-title" data-i18n="login.promoTitle">Учись быстрее <span class="tag-lime" data-i18n="login.promoTag">с ИИ</span></div>
+      <p class="auth-promo-text" data-i18n="login.promoText">Загрузи свой материал — и получи квиз, карточки или конспект за пару секунд.</p>
       <ul class="promo-list">
-        <li><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 17h.01"/></svg></span>Квизы по любой теме</li>
-        <li><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span>Карточки для запоминания</li>
-        <li><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Конспект из учебника или фото</li>
+        <li data-i18n="login.promoQuiz"><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 17h.01"/></svg></span>Квизы по любой теме</li>
+        <li data-i18n="login.promoCards"><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span>Карточки для запоминания</li>
+        <li data-i18n="login.promoNotes"><span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Конспект из учебника или фото</li>
       </ul>
     </aside>
 
@@ -30,62 +31,82 @@
     <section class="auth-card card">
       <!-- Только телефон: логотип и кнопка темы -->
       <div class="auth-mobile-bar">
-        <div class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span>ИИ-помощник</div>
+        <div class="logo" data-i18n="app.logo"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span>ИИ-помощник</div>
+        <div class="auth-tools">
+        <details class="menu lang-menu">
+          <summary class="lang-btn" aria-label="Язык интерфейса" data-i18n-aria="lang.choose"><span class="lang-current">RU</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="menu-pop lang-pop">
+            <button type="button" data-lang="ru" lang="ru" role="menuitemradio" aria-checked="false"><span class="lang-code">RU</span>Русский</button>
+            <button type="button" data-lang="kk" lang="kk" role="menuitemradio" aria-checked="false"><span class="lang-code">KZ</span>Қазақша</button>
+            <button type="button" data-lang="en" lang="en" role="menuitemradio" aria-checked="false"><span class="lang-code">EN</span>English</button>
+          </div>
+        </details>
         <button class="theme-toggle" type="button" aria-label="Переключить тему">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         </button>
+        </div>
       </div>
 
       <div class="auth-head">
         <div>
           <!-- Заголовок меняется стилями в зависимости от режима (вход / регистрация / новый пароль) -->
           <h2 class="auth-title">
-            <span class="for-login">С возвращением!</span><span class="for-register">Создай аккаунт</span><span class="for-reset">Новый пароль</span>
+            <span class="for-login" data-i18n="login.title">С возвращением!</span><span class="for-register" data-i18n="register.title">Создай аккаунт</span><span class="for-reset" data-i18n="reset.title">Новый пароль</span>
           </h2>
           <p class="auth-subtitle">
-            <span class="for-login">Войди, чтобы продолжить учиться</span><span class="for-register">Это займёт меньше минуты</span><span class="for-reset">Придумай новый пароль для входа</span>
+            <span class="for-login" data-i18n="login.subtitle">Войди, чтобы продолжить учиться</span><span class="for-register" data-i18n="register.subtitle">Это займёт меньше минуты</span><span class="for-reset" data-i18n="reset.subtitle">Придумай новый пароль для входа</span>
           </p>
         </div>
+        <div class="auth-tools auth-theme">
+        <details class="menu lang-menu">
+          <summary class="lang-btn" aria-label="Язык интерфейса" data-i18n-aria="lang.choose"><span class="lang-current">RU</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="menu-pop lang-pop">
+            <button type="button" data-lang="ru" lang="ru" role="menuitemradio" aria-checked="false"><span class="lang-code">RU</span>Русский</button>
+            <button type="button" data-lang="kk" lang="kk" role="menuitemradio" aria-checked="false"><span class="lang-code">KZ</span>Қазақша</button>
+            <button type="button" data-lang="en" lang="en" role="menuitemradio" aria-checked="false"><span class="lang-code">EN</span>English</button>
+          </div>
+        </details>
         <button class="theme-toggle auth-theme" type="button" aria-label="Переключить тему">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         </button>
+        </div>
       </div>
 
       <div class="tabs auth-tabs">
-        <button id="authModeLogin" class="tab auth-mode active" type="button">Вход</button>
-        <button id="authModeRegister" class="tab auth-mode" type="button">Регистрация</button>
+        <button id="authModeLogin" class="tab auth-mode active" type="button" data-i18n="login.tab">Вход</button>
+        <button id="authModeRegister" class="tab auth-mode" type="button" data-i18n="register.tab">Регистрация</button>
       </div>
 
       <form id="authForm" novalidate>
-        <label for="authEmail">Email</label>
-        <input id="authEmail" class="input" type="email" autocomplete="email" maxlength="254" placeholder="you@mail.com" required>
+        <label for="authEmail" data-i18n="login.email">Email</label>
+        <input id="authEmail" class="input" type="email" autocomplete="email" maxlength="254" placeholder="you@mail.com" data-i18n-placeholder="login.emailPlaceholder" required>
 
-        <label for="authPassword">Пароль</label>
+        <label for="authPassword" data-i18n="login.password">Пароль</label>
         <div class="password-field">
-          <input id="authPassword" class="input" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="Твой пароль" required>
-          <button type="button" class="eye-btn" data-toggle-password="authPassword" aria-label="Показать пароль" aria-pressed="false">
+          <input id="authPassword" class="input" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="Твой пароль" data-i18n-placeholder="login.passwordPlaceholder" required>
+          <button type="button" class="eye-btn" data-toggle-password="authPassword" aria-label="Показать пароль" data-i18n-aria="password.show" aria-pressed="false">
             <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
           </button>
         </div>
         <div class="forgot-row">
-          <button id="authForgot" type="button" class="link-btn">Забыли пароль?</button>
+          <button id="authForgot" type="button" class="link-btn" data-i18n="login.forgot">Забыли пароль?</button>
         </div>
 
         <div id="registerOnly" hidden>
-          <label for="authPassword2">Повторите пароль</label>
+          <label for="authPassword2" data-i18n="register.password2">Повторите пароль</label>
           <div class="password-field">
-            <input id="authPassword2" class="input" type="password" autocomplete="new-password" maxlength="72" placeholder="Ещё раз пароль">
-            <button type="button" class="eye-btn" data-toggle-password="authPassword2" aria-label="Показать пароль" aria-pressed="false">
+            <input id="authPassword2" class="input" type="password" autocomplete="new-password" maxlength="72" placeholder="Ещё раз пароль" data-i18n-placeholder="register.password2Placeholder">
+            <button type="button" class="eye-btn" data-toggle-password="authPassword2" aria-label="Показать пароль" data-i18n-aria="password.show" aria-pressed="false">
             <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
           </button>
           </div>
           <label class="check">
             <input id="authConsent" type="checkbox">
-            <span>Я прочитал(а) <a href="privacy.html" target="_blank" rel="noopener">политику конфиденциальности</a>
+            <span data-i18n-html="register.consentHtml">Я прочитал(а) <a href="privacy.html" target="_blank" rel="noopener">политику конфиденциальности</a>
               и согласен(на) с обработкой данных</span>
           </label>
         </div>
@@ -93,24 +114,24 @@
 
       <!-- Новый пароль (после перехода по ссылке из письма) -->
       <form id="resetForm" hidden novalidate>
-        <label for="resetPassword">Новый пароль (минимум 8 символов)</label>
+        <label for="resetPassword" data-i18n="reset.label">Новый пароль (минимум 8 символов)</label>
         <div class="password-field">
-          <input id="resetPassword" class="input" type="password" autocomplete="new-password" minlength="8" maxlength="72" placeholder="Минимум 8 символов" required>
-          <button type="button" class="eye-btn" data-toggle-password="resetPassword" aria-label="Показать пароль" aria-pressed="false">
+          <input id="resetPassword" class="input" type="password" autocomplete="new-password" minlength="8" maxlength="72" placeholder="Минимум 8 символов" data-i18n-placeholder="reset.placeholder" required>
+          <button type="button" class="eye-btn" data-toggle-password="resetPassword" aria-label="Показать пароль" data-i18n-aria="password.show" aria-pressed="false">
             <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
           </button>
         </div>
-        <button class="primary" type="submit">Сохранить пароль</button>
+        <button class="primary" type="submit" data-i18n="reset.submit">Сохранить пароль</button>
       </form>
 
       <!-- Сообщения и ошибки. Вид плашки (ошибка / информация) ставит js/auth-ui.js -->
       <div id="authMessage" class="auth-message" role="status"></div>
 
       <!-- Кнопка стоит после сообщения (как в макете), но относится к форме входа через атрибут form -->
-      <button id="authSubmit" class="primary" type="submit" form="authForm">Войти</button>
+      <button id="authSubmit" class="primary" type="submit" form="authForm" data-i18n="login.submit">Войти</button>
 
-      <div class="auth-footer"><a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></div>
+      <div class="auth-footer"><a href="privacy.html" target="_blank" rel="noopener" data-i18n="login.privacy">Политика конфиденциальности</a></div>
     </section>
   </div>
 
@@ -119,30 +140,38 @@
 
   <!-- Шапка: логотип, плашка материала, навигация, тема, аккаунт -->
   <header class="app-header no-print">
-    <button type="button" class="logo logo-btn" data-go="chatPanel" aria-label="На главную"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span><span class="logo-text">ИИ-помощник</span></button>
-    <button id="materialChip" type="button" class="material-chip" data-action="text" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span>Материал: <span id="materialChipName"></span></span></button>
-    <nav class="app-nav" aria-label="Разделы">
-      <button type="button" class="nav-link" data-go="libraryPanel">Мои квизы</button>
-      <button type="button" class="nav-link" data-action="docs">Документы</button>
-      <button type="button" class="nav-link" data-go="historyPanel">История</button>
+    <button type="button" class="logo logo-btn" data-go="chatPanel" aria-label="На главную" data-i18n-aria="nav.home"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5c.5 4.6 2.9 7 9.5 9.5-6.6 2.5-9 4.9-9.5 9.5-.5-4.6-2.9-7-9.5-9.5 6.6-2.5 9-4.9 9.5-9.5z"/></svg></span><span class="logo-text" data-i18n="app.logo">ИИ-помощник</span></button>
+    <button id="materialChip" type="button" class="material-chip" data-action="text" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span data-i18n="header.material">Материал: <span id="materialChipName"></span></span></button>
+    <nav class="app-nav" aria-label="Разделы" data-i18n-aria="nav.sections">
+      <button type="button" class="nav-link" data-go="libraryPanel" data-i18n="nav.quizzes">Мои квизы</button>
+      <button type="button" class="nav-link" data-action="docs" data-i18n="nav.docs">Документы</button>
+      <button type="button" class="nav-link" data-go="historyPanel" data-i18n="nav.history">История</button>
     </nav>
     <div class="header-actions">
+      <details class="menu lang-menu">
+        <summary class="lang-btn" aria-label="Язык интерфейса" data-i18n-aria="lang.choose"><span class="lang-current">RU</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="menu-pop lang-pop">
+          <button type="button" data-lang="ru" lang="ru" role="menuitemradio" aria-checked="false"><span class="lang-code">RU</span>Русский</button>
+          <button type="button" data-lang="kk" lang="kk" role="menuitemradio" aria-checked="false"><span class="lang-code">KZ</span>Қазақша</button>
+          <button type="button" data-lang="en" lang="en" role="menuitemradio" aria-checked="false"><span class="lang-code">EN</span>English</button>
+        </div>
+      </details>
       <button class="theme-toggle" type="button" aria-label="Переключить тему">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       </button>
       <details class="menu account-menu">
-        <summary class="avatar" aria-label="Меню аккаунта"><span id="avatarLetter" class="avatar-letter">?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="burger"><path d="M4 7h16M4 12h16M4 17h10"/></svg></summary>
+        <summary class="avatar" aria-label="Меню аккаунта" data-i18n-aria="account.menu"><span id="avatarLetter" class="avatar-letter">?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="burger"><path d="M4 7h16M4 12h16M4 17h10"/></svg></summary>
         <div class="menu-pop">
           <div class="menu-nav">
-            <button type="button" data-go="libraryPanel">Мои квизы</button>
-            <button type="button" data-action="docs">Документы</button>
-            <button type="button" data-go="historyPanel">История</button>
+            <button type="button" data-go="libraryPanel" data-i18n="nav.quizzes">Мои квизы</button>
+            <button type="button" data-action="docs" data-i18n="nav.docs">Документы</button>
+            <button type="button" data-go="historyPanel" data-i18n="nav.history">История</button>
           </div>
           <div class="userbar">
             <span id="userEmail"></span>
-            <button id="logoutBtn" type="button">Выйти</button>
-            <button id="deleteAccountBtn" type="button" class="danger">Удалить аккаунт и все данные</button>
+            <button id="logoutBtn" type="button" data-i18n="account.logout">Выйти</button>
+            <button id="deleteAccountBtn" type="button" class="danger" data-i18n="account.delete">Удалить аккаунт и все данные</button>
           </div>
         </div>
       </details>
@@ -152,15 +181,15 @@
   <!-- Подтверждение удаления аккаунта -->
   <dialog id="deleteDialog">
     <form id="deleteForm" method="dialog">
-      <h3>Удалить аккаунт?</h3>
-      <p>Будут безвозвратно удалены все ваши квизы, результаты, чаты и документы, а также сама учётная запись.
+      <h3 data-i18n="delete.title">Удалить аккаунт?</h3>
+      <p data-i18n="delete.text">Будут безвозвратно удалены все ваши квизы, результаты, чаты и документы, а также сама учётная запись.
         Отменить это нельзя.</p>
-      <label for="deleteConfirm">Чтобы подтвердить, введите слово <strong>УДАЛИТЬ</strong></label>
+      <label for="deleteConfirm" data-i18n-html="delete.confirmHtml">Чтобы подтвердить, введите слово <strong>УДАЛИТЬ</strong></label>
       <input id="deleteConfirm" autocomplete="off">
       <div id="deleteMessage" class="hint" role="status"></div>
       <div class="row">
-        <button id="deleteCancel" type="button">Отмена</button>
-        <button id="deleteSubmit" type="submit" class="danger">Удалить навсегда</button>
+        <button id="deleteCancel" type="button" data-i18n="delete.cancel">Отмена</button>
+        <button id="deleteSubmit" type="submit" class="danger" data-i18n="delete.submit">Удалить навсегда</button>
       </div>
     </form>
   </dialog>
@@ -169,54 +198,54 @@
   <dialog id="materialDialog" class="sheet" aria-labelledby="materialDialogTitle">
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-head">
-      <h2 id="materialDialogTitle">Материал</h2>
-      <button type="button" class="icon-btn" data-close aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 id="materialDialogTitle" data-i18n="material.dialogTitle">Материал</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Закрыть" data-i18n-aria="common.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
       <div class="material-box">
-        <strong>Материал (необязательно)</strong>
-        <div class="hint">Загрузите файл, сфотографируйте конспект или страницу учебника, или вставьте текст. Чат, квиз, карточки и конспект будут опираться на него.</div>
+        <strong data-i18n="material.optional">Материал (необязательно)</strong>
+        <div class="hint" data-i18n="material.hint">Загрузите файл, сфотографируйте конспект или страницу учебника, или вставьте текст. Чат, квиз, карточки и конспект будут опираться на него.</div>
         <div class="row">
           <input id="file" type="file" accept=".pdf,.txt,.md" hidden>
-          <button type="button" data-action="file">Загрузить файл (PDF, TXT, MD)</button>
+          <button type="button" data-action="file" data-i18n="material.uploadFile">Загрузить файл (PDF, TXT, MD)</button>
           <input id="photo" type="file" accept="image/*" multiple hidden>
-          <button id="photoBtn" type="button">Добавить фото</button>
-          <button id="clearMaterial" type="button">Очистить</button>
+          <button id="photoBtn" type="button" data-i18n="material.addPhoto">Добавить фото</button>
+          <button id="clearMaterial" type="button" data-i18n="material.clear">Очистить</button>
         </div>
-        <textarea id="material" placeholder="Или вставьте сюда текст урока..." style="margin-top:8px;"></textarea>
+        <textarea id="material" placeholder="Или вставьте сюда текст урока..." data-i18n-placeholder="material.placeholder" style="margin-top:8px;"></textarea>
 
         <!-- Большие документы: хранятся в аккаунте, ИИ получает только нужные части -->
         <div class="doc-box">
-          <strong>Большой документ (учебник, PDF до 400 страниц)</strong>
+          <strong data-i18n="docs.bigTitle">Большой документ (учебник, PDF до 400 страниц)</strong>
           <div class="row">
             <input id="docFile" type="file" accept=".pdf,.txt,.md" hidden>
-            <button id="docUploadBtn" type="button">Загрузить большой файл</button>
+            <button id="docUploadBtn" type="button" data-i18n="docs.upload">Загрузить большой файл</button>
           </div>
 
           <div id="activeDocBox" class="active-doc" hidden>
             <div class="row" style="margin-top:0;">
-              <span>Активный документ: <strong id="activeDocTitle"></strong></span>
-              <button id="docOff" type="button">Отключить</button>
+              <span data-i18n="docs.active">Активный документ: <strong id="activeDocTitle"></strong></span>
+              <button id="docOff" type="button" data-i18n="docs.off">Отключить</button>
             </div>
-            <div class="hint">Пока документ выбран, квиз, карточки, конспект и чат работают по нему,
+            <div class="hint" data-i18n="docs.activeHint">Пока документ выбран, квиз, карточки, конспект и чат работают по нему,
               а поле «Материал» не используется.</div>
 
-            <label for="docScope">Какую часть документа использовать (квиз, карточки, конспект)</label>
+            <label for="docScope" data-i18n="docs.scopeLabel">Какую часть документа использовать (квиз, карточки, конспект)</label>
             <select id="docScope">
-              <option value="all" selected>Весь документ</option>
-              <option value="pages">Страницы…</option>
-              <option value="topic">Найти в документе тему из команды (например, /квиз фотосинтез)</option>
+              <option value="all" selected data-i18n="docs.scopeAll">Весь документ</option>
+              <option value="pages" data-i18n="docs.scopePages">Страницы…</option>
+              <option value="topic" data-i18n="docs.scopeTopic">Найти в документе тему из команды (например, /квиз фотосинтез)</option>
             </select>
             <div id="docPages" class="row" hidden>
-              <span>с</span>
-              <input id="pageFrom" type="number" min="1" value="1" class="page-input" aria-label="С какой страницы">
-              <span>по</span>
-              <input id="pageTo" type="number" min="1" value="10" class="page-input" aria-label="По какую страницу">
+              <span data-i18n="docs.pagesFrom">с</span>
+              <input id="pageFrom" type="number" min="1" value="1" class="page-input" aria-label="С какой страницы" data-i18n-aria="docs.pageFromAria">
+              <span data-i18n="docs.pagesTo">по</span>
+              <input id="pageTo" type="number" min="1" value="10" class="page-input" aria-label="По какую страницу" data-i18n-aria="docs.pageToAria">
               <span id="docPagesHint" class="hint" style="margin-top:0;"></span>
             </div>
           </div>
 
           <details id="docsBox" class="sessions-box">
-            <summary>Мои документы</summary>
+            <summary data-i18n="docs.myDocs">Мои документы</summary>
             <div id="docsMessage" class="hint"></div>
             <div id="docsList"></div>
           </details>
@@ -228,64 +257,64 @@
   <dialog id="attachSheet" class="sheet" aria-labelledby="attachSheetTitle">
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-head">
-      <h2 id="attachSheetTitle">Что сделать?</h2>
-      <button type="button" class="icon-btn" data-close aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 id="attachSheetTitle" data-i18n="attach.title">Что сделать?</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Закрыть" data-i18n-aria="common.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-    <div class="sheet-label">Материал</div>
+    <div class="sheet-label" data-i18n="attach.material">Материал</div>
     <div class="sheet-tiles">
-      <button type="button" class="sheet-tile" data-action="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Фото конспекта</span></button>
-      <button type="button" class="sheet-tile" data-action="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l8-8"/></svg><span>Файл</span></button>
-      <button type="button" class="sheet-tile" data-action="book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H20"/></svg><span>Учебник PDF</span></button>
+      <button type="button" class="sheet-tile" data-action="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i18n="attach.photo">Фото конспекта</span></button>
+      <button type="button" class="sheet-tile" data-action="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l8-8"/></svg><span data-i18n="attach.file">Файл</span></button>
+      <button type="button" class="sheet-tile" data-action="book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H20"/></svg><span data-i18n="attach.book">Учебник PDF</span></button>
     </div>
-    <button type="button" class="sheet-link" data-action="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>Вставить текст или настроить материал</button>
-    <div class="sheet-label">Команды</div>
-    <button type="button" class="sheet-cmd on-primary" data-cmd="квиз"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 17h.01"/></svg></span><span><strong>/квиз</strong><small>Тест с вариантами ответов</small></span></button>
-    <button type="button" class="sheet-cmd on-lime" data-cmd="карточки"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span><span><strong>/карточки</strong><small>Запомнить термины и даты</small></span></button>
-    <button type="button" class="sheet-cmd on-pink" data-cmd="конспект"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><span><strong>/конспект</strong><small>Главное из темы коротко</small></span></button>
+    <button type="button" class="sheet-link" data-action="text" data-i18n="attach.text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>Вставить текст или настроить материал</button>
+    <div class="sheet-label" data-i18n="attach.commands">Команды</div>
+    <button type="button" class="sheet-cmd on-primary" data-cmd="квиз"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 17h.01"/></svg></span><span><strong data-i18n="cmd.quiz.label">/квиз</strong><small data-i18n="cmd.quiz.hint">Тест с вариантами ответов</small></span></button>
+    <button type="button" class="sheet-cmd on-lime" data-cmd="карточки"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span><span><strong data-i18n="cmd.cards.label">/карточки</strong><small data-i18n="cmd.cards.hint">Запомнить термины и даты</small></span></button>
+    <button type="button" class="sheet-cmd on-pink" data-cmd="конспект"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><span><strong data-i18n="cmd.summary.label">/конспект</strong><small data-i18n="cmd.summary.hint">Главное из темы коротко</small></span></button>
   </dialog>
 
   <!-- Вкладки: скрыты, ими управляют шапка и карточки главной (логика в tabs.js) -->
   <div class="tabs app-tabs" aria-hidden="true">
-    <button class="tab active" data-panel="chatPanel" tabindex="-1">Чат</button>
-    <button class="tab" data-panel="quizPanel" tabindex="-1">Квиз</button>
-    <button class="tab" data-panel="flashPanel" tabindex="-1">Карточки</button>
-    <button class="tab" data-panel="studyPanel" tabindex="-1">Конспект</button>
-    <button class="tab" data-panel="libraryPanel" tabindex="-1">Мои квизы</button>
-    <button class="tab" data-panel="historyPanel" tabindex="-1">История</button>
+    <button class="tab active" data-panel="chatPanel" tabindex="-1" data-i18n="tool.chat">Чат</button>
+    <button class="tab" data-panel="quizPanel" tabindex="-1" data-i18n="tool.quiz">Квиз</button>
+    <button class="tab" data-panel="flashPanel" tabindex="-1" data-i18n="tool.cards">Карточки</button>
+    <button class="tab" data-panel="studyPanel" tabindex="-1" data-i18n="tool.summary">Конспект</button>
+    <button class="tab" data-panel="libraryPanel" tabindex="-1" data-i18n="nav.quizzes">Мои квизы</button>
+    <button class="tab" data-panel="historyPanel" tabindex="-1" data-i18n="nav.history">История</button>
   </div>
 
   <!-- Заголовок раздела (всё, кроме главной) -->
   <div class="tool-bar no-print">
-    <button type="button" class="icon-btn back-btn" data-go="chatPanel" aria-label="На главную"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button type="button" class="icon-btn back-btn" data-go="chatPanel" aria-label="На главную" data-i18n-aria="nav.home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
     <h2 class="tool-title">
-      <span data-for="quizPanel">Квиз</span><span data-for="flashPanel">Карточки</span><span data-for="studyPanel">Конспект</span><span data-for="libraryPanel">Мои квизы</span><span data-for="historyPanel">История</span>
+      <span data-for="quizPanel" data-i18n="tool.quiz">Квиз</span><span data-for="flashPanel" data-i18n="tool.cards">Карточки</span><span data-for="studyPanel" data-i18n="tool.summary">Конспект</span><span data-for="libraryPanel" data-i18n="nav.quizzes">Мои квизы</span><span data-for="historyPanel" data-i18n="nav.history">История</span>
     </h2>
   </div>
 
   <div class="topic-field">
-    <label for="topic">Тема (если добавлен материал, можно оставить пустой)</label>
-    <input id="topic" placeholder="Например: Фотосинтез">
+    <label for="topic" data-i18n="topic.label">Тема (если добавлен материал, можно оставить пустой)</label>
+    <input id="topic" placeholder="Например: Фотосинтез" data-i18n-placeholder="topic.placeholder">
   </div>
 
   <!-- Главная: чат -->
   <div id="chatPanel" class="panel">
     <!-- Пустое состояние (пока нет сообщений) -->
     <section class="home-hero">
-      <div class="hello-pill"><span class="dot"></span>Привет! Я помогу подготовиться</div>
-      <h1 class="hero-title">Что изучаем<span class="hero-tag">сегодня?</span></h1>
-      <p class="hero-sub"><span class="only-desktop">Спроси что угодно, прикрепи конспект, фото или учебник — а потом сделаем по нему квиз или карточки.</span><span class="only-mobile">Спроси что угодно или выбери, с чего начать</span></p>
+      <div class="hello-pill" data-i18n="home.hello"><span class="dot"></span>Привет! Я помогу подготовиться</div>
+      <h1 class="hero-title" data-i18n="home.title">Что изучаем<span class="hero-tag" data-i18n="home.titleTag">сегодня?</span></h1>
+      <p class="hero-sub"><span class="only-desktop" data-i18n="home.sub">Спроси что угодно, прикрепи конспект, фото или учебник — а потом сделаем по нему квиз или карточки.</span><span class="only-mobile" data-i18n="home.subShort">Спроси что угодно или выбери, с чего начать</span></p>
     </section>
 
     <!-- Шапка разговора (когда сообщения есть) -->
     <div class="chat-toolbar">
-      <div id="chatTitle" class="hint">Новый чат</div>
-      <label for="style" class="visually-hidden">Стиль помощника</label>
+      <div id="chatTitle" class="hint" data-i18n="chat.newChat">Новый чат</div>
+      <label for="style" class="visually-hidden" data-i18n="chat.styleLabel">Стиль помощника</label>
       <select id="style">
-        <option value="tutor" selected>Терпеливый репетитор</option>
-        <option value="simple">Объясняй простыми словами</option>
-        <option value="strict">Строгий преподаватель</option>
+        <option value="tutor" selected data-i18n="chat.style.tutor">Терпеливый репетитор</option>
+        <option value="simple" data-i18n="chat.style.simple">Объясняй простыми словами</option>
+        <option value="strict" data-i18n="chat.style.strict">Строгий преподаватель</option>
       </select>
-      <button id="chatReset" type="button">Новый чат</button>
+      <button id="chatReset" type="button" data-i18n="chat.newChat">Новый чат</button>
     </div>
 
     <div id="chatLog"></div>
@@ -293,29 +322,29 @@
     <!-- Поле ввода. На телефоне прижато к низу экрана -->
     <div class="composer-dock">
       <!-- Меню команд: появляется, когда в поле ввода набран «/» -->
-      <div id="cmdMenu" class="cmd-menu" role="listbox" aria-label="Команды" hidden></div>
+      <div id="cmdMenu" class="cmd-menu" role="listbox" aria-label="Команды" data-i18n-aria="chat.commandsAria" hidden></div>
       <!-- Быстрые подсказки (во время разговора) -->
       <div class="quick-row no-print">
-        <button type="button" class="quick-btn" data-cmd-fill="квиз">/квиз</button>
-        <button type="button" class="quick-btn" data-cmd-fill="карточки">/карточки</button>
-        <button type="button" class="quick-btn" data-cmd-fill="конспект">/конспект</button>
-        <button type="button" class="quick-btn" data-say="Объясни проще">Объясни проще</button>
+        <button type="button" class="quick-btn" data-cmd-fill="квиз" data-i18n="cmd.quiz.label">/квиз</button>
+        <button type="button" class="quick-btn" data-cmd-fill="карточки" data-i18n="cmd.cards.label">/карточки</button>
+        <button type="button" class="quick-btn" data-cmd-fill="конспект" data-i18n="cmd.summary.label">/конспект</button>
+        <button type="button" class="quick-btn" data-say="chat.explainSimpler" data-i18n="chat.explainSimpler">Объясни проще</button>
       </div>
       <div class="composer-status">
-        <div id="materialInfo" class="hint">Материал не добавлен.</div>
+        <div id="materialInfo" class="hint" data-i18n="material.none">Материал не добавлен.</div>
         <span id="docStatus" class="hint" role="status"></span>
         <span id="chatSaveNote" class="hint"></span>
       </div>
       <div class="composer">
-        <button id="attachBtn" type="button" class="attach-plus" aria-label="Добавить материал или выбрать действие"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-        <textarea id="chatInput" rows="1" aria-label="Сообщение" placeholder="Например: объясни фотосинтез простыми словами… или набери / для команд"></textarea>
+        <button id="attachBtn" type="button" class="attach-plus" aria-label="Добавить материал или выбрать действие" data-i18n-aria="chat.attachAria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        <textarea id="chatInput" rows="1" aria-label="Сообщение" data-i18n-aria="chat.messageAria" placeholder="Например: объясни фотосинтез простыми словами… или набери / для команд" data-i18n-placeholder="chat.placeholder"></textarea>
         <div class="attach-chips">
-          <button type="button" class="chip-btn" data-action="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l8-8"/></svg>Файл</button>
-          <button type="button" class="chip-btn" data-action="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>Фото конспекта</button>
-          <button type="button" class="chip-btn" data-action="book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H20"/></svg>Учебник PDF</button>
-          <button type="button" class="chip-btn" data-action="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>Текст</button>
+          <button type="button" class="chip-btn" data-action="file" data-i18n="attach.file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l8-8"/></svg>Файл</button>
+          <button type="button" class="chip-btn" data-action="photo" data-i18n="attach.photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>Фото конспекта</button>
+          <button type="button" class="chip-btn" data-action="book" data-i18n="attach.book"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H20"/></svg>Учебник PDF</button>
+          <button type="button" class="chip-btn" data-action="text" data-i18n="attach.textShort"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg>Текст</button>
         </div>
-        <button id="chatSend" class="send-btn" aria-label="Отправить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-send"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <button id="chatSend" class="send-btn" aria-label="Отправить" data-i18n-aria="chat.send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-send"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
       </div>
     </div>
 
@@ -323,27 +352,27 @@
     <div class="home-cards">
       <button type="button" class="home-card on-primary" data-cmd="квиз">
         <span class="hc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 17h.01"/></svg></span>
-        <span class="hc-text"><span class="hc-title">Квиз</span><span class="hc-sub only-desktop">Проверь себя тестом по теме или материалу</span><span class="hc-sub only-mobile">Проверь себя тестом</span></span>
+        <span class="hc-text"><span class="hc-title" data-i18n="tool.quiz">Квиз</span><span class="hc-sub only-desktop" data-i18n="home.quizSub">Проверь себя тестом по теме или материалу</span><span class="hc-sub only-mobile" data-i18n="home.quizSubShort">Проверь себя тестом</span></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="chev"><path d="M9 6l6 6-6 6"/></svg>
       </button>
       <button type="button" class="home-card on-lime" data-cmd="карточки">
         <span class="hc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span>
-        <span class="hc-text"><span class="hc-title">Карточки</span><span class="hc-sub only-desktop">Запоминай термины и даты</span><span class="hc-sub only-mobile">Термины и даты</span></span>
+        <span class="hc-text"><span class="hc-title" data-i18n="tool.cards">Карточки</span><span class="hc-sub only-desktop" data-i18n="home.cardsSub">Запоминай термины и даты</span><span class="hc-sub only-mobile" data-i18n="home.cardsSubShort">Термины и даты</span></span>
       </button>
       <button type="button" class="home-card on-pink" data-cmd="конспект">
         <span class="hc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
-        <span class="hc-text"><span class="hc-title">Конспект</span><span class="hc-sub only-desktop">Коротко и по делу — главное из темы</span><span class="hc-sub only-mobile">Главное из темы</span></span>
+        <span class="hc-text"><span class="hc-title" data-i18n="tool.summary">Конспект</span><span class="hc-sub only-desktop" data-i18n="home.summarySub">Коротко и по делу — главное из темы</span><span class="hc-sub only-mobile" data-i18n="home.summarySubShort">Главное из темы</span></span>
       </button>
     </div>
 
     <!-- Недавние чаты -->
     <section class="recent">
       <div class="recent-head">
-        <span class="recent-title">Недавние чаты</span>
-        <button type="button" class="link-btn" data-go="historyPanel">Вся история</button>
+        <span class="recent-title" data-i18n="home.recent">Недавние чаты</span>
+        <button type="button" class="link-btn" data-go="historyPanel" data-i18n="home.allHistory">Вся история</button>
       </div>
       <details id="chatSessionsBox" class="sessions-box">
-        <summary>Сохранённые чаты</summary>
+        <summary data-i18n="chat.saved">Сохранённые чаты</summary>
         <div id="chatSessionsMessage" class="hint"></div>
         <div id="chatSessions"></div>
       </details>
@@ -352,22 +381,22 @@
 
   <!-- Квиз -->
   <div id="quizPanel" class="panel" hidden>
-    <label for="count">Количество вопросов (1–20)</label>
+    <label for="count" data-i18n="quiz.countLabel">Количество вопросов (1–20)</label>
     <input id="count" type="number" min="1" max="20" value="5">
 
-    <label for="difficulty">Сложность</label>
+    <label for="difficulty" data-i18n="quiz.difficulty">Сложность</label>
     <select id="difficulty">
-      <option>лёгкая</option>
-      <option selected>средняя</option>
-      <option>сложная</option>
+      <option value="лёгкая" data-i18n="difficulty.easy">лёгкая</option>
+      <option value="средняя" selected data-i18n="difficulty.medium">средняя</option>
+      <option value="сложная" data-i18n="difficulty.hard">сложная</option>
     </select>
 
-    <label class="check">
+    <label class="check" data-i18n="quiz.assignmentMode">
       <input id="assignment" type="checkbox">
       Режим задания (ответы не показываются, пока не нажать «Показать ответы»)
     </label>
 
-    <button id="btn" class="primary">Сгенерировать квиз</button>
+    <button id="btn" class="primary" data-i18n="quiz.generate">Сгенерировать квиз</button>
 
     <div id="message"></div>
     <div id="quiz"></div>
@@ -375,10 +404,10 @@
 
   <!-- Карточки -->
   <div id="flashPanel" class="panel" hidden>
-    <label for="fcCount">Количество карточек (1–30)</label>
+    <label for="fcCount" data-i18n="cards.countLabel">Количество карточек (1–30)</label>
     <input id="fcCount" type="number" min="1" max="30" value="10">
 
-    <button id="fcBtn" class="primary">Создать карточки</button>
+    <button id="fcBtn" class="primary" data-i18n="cards.create">Создать карточки</button>
     <div id="fcMessage" class="message"></div>
 
     <div id="fcViewer"></div>
@@ -387,8 +416,8 @@
   <!-- Конспект и план -->
   <div id="studyPanel" class="panel" hidden>
     <div class="row">
-      <button id="studySummary" class="primary half">Краткий конспект</button>
-      <button id="studyPlan" class="primary half">План изучения</button>
+      <button id="studySummary" class="primary half" data-i18n="study.summary">Краткий конспект</button>
+      <button id="studyPlan" class="primary half" data-i18n="study.plan">План изучения</button>
     </div>
     <div id="studyMessage" class="message"></div>
     <div id="studyResult"></div>

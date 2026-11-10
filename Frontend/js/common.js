@@ -4,15 +4,35 @@ const MAX_CHARS = 15000;
 
 const $ = (id) => document.getElementById(id);
 
-// Достаёт понятный текст ошибки из ответа сервера
+// Достаёт понятный текст ошибки из ответа сервера.
+// Сервер присылает код: {"detail": "file_too_large", "params": {"max_mb": 10}} — текст берём из словаря (errors.*).
 async function readError(response) {
   const text = await response.text();
   try {
-    const detail = JSON.parse(text).detail;
-    return typeof detail === "string" ? detail : JSON.stringify(detail);
+    const data = JSON.parse(text);
+    return errorText(data.detail, data.params);
   } catch (e) {
     return text;
   }
+}
+
+function errorText(detail, params) {
+  if (typeof detail === "string") {
+    return hasT("errors." + detail) ? t("errors." + detail, params || {}) : detail;
+  }
+  if (Array.isArray(detail)) return t("errors.validation_error"); // ошибка проверки полей FastAPI
+  return JSON.stringify(detail);
+}
+
+// Пояснения сервера (note, warning): {code, params} или список таких — в текст на текущем языке
+function noteText(note) {
+  if (!note) return "";
+  if (typeof note === "string") return note;
+  const list = Array.isArray(note) ? note : [note];
+  return list
+    .map((n) => (n && n.code ? t("notes." + n.code, n.params || {}) : ""))
+    .filter(Boolean)
+    .join(" ");
 }
 
 // ===== Вход и запросы к нашему серверу =====
@@ -31,7 +51,7 @@ async function apiFetch(path, options = {}) {
   }
   const response = await fetch(API_URL + path, { ...options, headers });
   if (response.status === 401 && typeof showAuth === "function") {
-    showAuth("Сессия истекла. Войдите снова.");
+    showAuth("auth.sessionExpired");
   }
   return response;
 }
@@ -45,10 +65,10 @@ function apiJson(path, method, body) {
   });
 }
 
-// Дата из базы в виде «12.11.2026, 14:05»
+// Дата из базы в виде «12.11.2026, 14:05» (формат — по языку интерфейса)
 function formatDate(iso) {
   const d = new Date(iso);
-  return isNaN(d) ? "" : d.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" });
+  return isNaN(d) ? "" : d.toLocaleString(getLocale(), { dateStyle: "short", timeStyle: "short" });
 }
 
 // Строка списка: заголовок, подпись и кнопки. Весь текст через textContent (данные из базы недоверенные).

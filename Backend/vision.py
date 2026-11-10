@@ -37,16 +37,16 @@ def detect_mime(data):
 def check_photos(photos):
     """photos: список (имя, байты). Возвращает список (байты, mime) или бросает FileError."""
     if not photos:
-        raise FileError(400, "Не выбрано ни одного фото.")
+        raise FileError(400, "photos_none")
     if len(photos) > MAX_PHOTOS:
-        raise FileError(400, f"За один раз можно добавить не больше {MAX_PHOTOS} фото.")
+        raise FileError(400, "photos_too_many", max=MAX_PHOTOS)
     result = []
     for name, data in photos:
         if len(data) > MAX_PHOTO_BYTES:
-            raise FileError(413, f"Фото «{name}» слишком большое (максимум {MAX_PHOTO_BYTES // (1024 * 1024)} МБ).")
+            raise FileError(413, "photo_too_large", name=name, max_mb=MAX_PHOTO_BYTES // (1024 * 1024))
         mime = detect_mime(data)
         if mime is None:
-            raise FileError(400, f"«{name}» — не картинка. Поддерживаются JPG, PNG, WEBP и HEIC.")
+            raise FileError(400, "photo_not_image", name=name)
         result.append((data, mime))
     return result
 

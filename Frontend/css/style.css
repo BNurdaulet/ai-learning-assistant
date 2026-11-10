@@ -112,6 +112,22 @@ button.danger { background: var(--error-bg); color: var(--error); }
 :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
+/* Переключатель языка (RU / KZ / EN): кнопка как у темы, список — как меню аккаунта */
+.lang-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+            height: 44px; min-height: 44px; padding: 0 10px 0 14px; border-radius: 14px;
+            background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm);
+            font-size: 14px; font-weight: 700; letter-spacing: 0.02em; user-select: none; }
+.lang-btn svg { width: 16px; height: 16px; color: var(--muted); transition: transform .15s; }
+.lang-menu[open] .lang-btn svg { transform: rotate(180deg); }
+.lang-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.lang-menu .lang-pop { min-width: 190px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.lang-menu .lang-pop button { width: 100%; justify-content: flex-start; min-height: 44px; background: none; gap: 12px; }
+.lang-menu .lang-pop button:hover:not(:disabled) { box-shadow: none; background: var(--tint); }
+.lang-menu .lang-pop button[aria-checked="true"] { background: var(--tint); color: var(--primary-text); }
+.lang-code { width: 24px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.lang-pop button[aria-checked="true"] .lang-code { color: var(--primary-text); }
+.auth-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+
 /* ---------- Поля ввода ---------- */
 label { display: block; margin-top: 16px; font-weight: 700; font-size: 15px; }
 .input, input, select, textarea {
