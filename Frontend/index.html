@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 </head>
 <body>
+  <!-- Объявления таймера для экранного диктора: только смена фазы (js/pomodoro.js) -->
+  <div class="visually-hidden" data-pomo-live role="status"></div>
   <!-- Экран входа (виден, пока пользователь не вошёл) -->
   <div id="authScreen" class="auth-screen" hidden>
     <!-- Слева (только ПК): фиолетовый блок -->
@@ -149,6 +151,8 @@
       <button type="button" class="nav-link" data-go="assignmentsPanel" data-i18n="nav.assignments"></button>
     </nav>
     <div class="header-actions">
+      <!-- Таймер Помодоро (js/pomodoro.js): время видно, когда таймер запущен или на паузе -->
+      <button type="button" class="pomo-chip" data-pomo-open aria-haspopup="dialog" aria-controls="pomoDialog"><svg class="pomo-mini" viewBox="0 0 36 36" aria-hidden="true"><circle class="pomo-track" cx="18" cy="18" r="15"/><circle class="pomo-value" data-pomo-ring cx="18" cy="18" r="15" pathLength="100"/></svg><svg class="pomo-chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg><span class="pomo-chip-time" data-pomo-time>25:00</span></button>
       <details class="menu lang-menu">
         <summary class="lang-btn" aria-label="Язык интерфейса" data-i18n-aria="lang.choose"><span class="lang-current">RU</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
         <div class="menu-pop lang-pop">
@@ -274,6 +278,77 @@
     <button type="button" class="sheet-cmd on-lime" data-cmd="карточки"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></span><span><strong data-i18n="cmd.cards.label">/карточки</strong><small data-i18n="cmd.cards.hint">Запомнить термины и даты</small></span></button>
     <button type="button" class="sheet-cmd on-pink" data-cmd="конспект"><span class="cmd-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><span><strong data-i18n="cmd.summary.label">/конспект</strong><small data-i18n="cmd.summary.hint">Главное из темы коротко</small></span></button>
   </dialog>
+
+  <!-- Таймер Помодоро и режим фокуса (js/pomodoro.js, js/focus.js) -->
+  <dialog id="pomoDialog" class="sheet pomo-sheet" aria-labelledby="pomoTitle">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="pomoTitle" data-i18n="pomo.title">Таймер</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Закрыть" data-i18n-aria="common.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="pomo-main">
+      <div class="pomo-ring-wrap">
+        <svg class="pomo-ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="pomo-track" cx="60" cy="60" r="54"/><circle class="pomo-value" data-pomo-ring cx="60" cy="60" r="54" pathLength="100"/></svg>
+        <div class="pomo-ring-text">
+          <span class="pomo-mode" data-pomo-mode></span>
+          <span class="pomo-time" data-pomo-time role="timer" aria-live="off">25:00</span>
+          <span class="pomo-round" data-pomo-round></span>
+        </div>
+      </div>
+      <div class="pomo-count" data-pomo-count></div>
+      <p class="hint pomo-note" data-pomo-note hidden></p>
+    </div>
+    <div class="pomo-controls">
+      <button type="button" class="btn-primary pomo-toggle" data-pomo-action="toggle"><svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"/></svg><svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg><span class="pomo-toggle-text"></span></button>
+      <button type="button" class="btn-soft" data-pomo-action="reset" data-i18n="pomo.reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/></svg>Сбросить</button>
+      <button type="button" class="btn-soft" data-pomo-action="skip" data-i18n="pomo.skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5l9.5 6.5L5 18.5z"/><path d="M19 5v14"/></svg>Пропустить</button>
+    </div>
+    <div class="pomo-focus">
+      <button type="button" class="btn-primary" data-focus="session" data-i18n="focus.startSession"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>Начать фокус-сессию</button>
+      <button type="button" class="btn-soft" data-focus="enter" data-i18n="focus.enter">Только режим фокуса</button>
+      <p class="hint" data-i18n="focus.honest"></p>
+    </div>
+    <details class="pomo-settings-box">
+      <summary data-i18n="pomo.settings">Настройки</summary>
+      <form id="pomoSettings" novalidate>
+        <div class="pomo-fields">
+          <div><label for="pomoWork" data-i18n="pomo.field.work">Работа</label><input id="pomoWork" name="work" type="number" min="1" max="120" step="1" inputmode="numeric" aria-describedby="pomoRangeHint"></div>
+          <div><label for="pomoShort" data-i18n="pomo.field.short">Короткий перерыв</label><input id="pomoShort" name="short" type="number" min="1" max="120" step="1" inputmode="numeric" aria-describedby="pomoRangeHint"></div>
+          <div><label for="pomoLong" data-i18n="pomo.field.long">Длинный перерыв</label><input id="pomoLong" name="long" type="number" min="1" max="120" step="1" inputmode="numeric" aria-describedby="pomoRangeHint"></div>
+        </div>
+        <div id="pomoRangeHint" class="hint" data-i18n="pomo.range"></div>
+        <label class="check"><input type="checkbox" name="autoStart"><span data-i18n="pomo.autoStart"></span></label>
+        <label class="check"><input type="checkbox" name="sound"><span data-i18n="pomo.sound"></span></label>
+        <label class="check"><input type="checkbox" name="notify" aria-describedby="pomoNotifyHint"><span data-i18n="pomo.notify"></span></label>
+        <div id="pomoNotifyHint" class="hint" hidden></div>
+        <label class="check"><input type="checkbox" name="fullscreen"><span data-i18n="pomo.fullscreen"></span></label>
+      </form>
+    </details>
+    <div class="visually-hidden" data-pomo-live role="status"></div>
+  </dialog>
+
+  <!-- Перерыв во время фокуса: спокойный экран с советом -->
+  <dialog id="focusBreak" class="focus-break" aria-labelledby="focusBreakTitle" aria-describedby="focusTip">
+    <div class="focus-break-inner">
+      <span class="focus-break-mode" data-pomo-mode></span>
+      <h2 id="focusBreakTitle" data-i18n="focus.breakTitle">Время отдохнуть</h2>
+      <div class="focus-break-time" data-pomo-time role="timer" aria-live="off"></div>
+      <p id="focusTip" class="focus-tip"></p>
+      <div class="focus-break-actions">
+        <button id="focusSkipBreak" type="button" class="btn-primary" data-pomo-action="skip" data-i18n="focus.skipBreak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5l9.5 6.5L5 18.5z"/><path d="M19 5v14"/></svg>Пропустить перерыв</button>
+        <button type="button" class="btn-soft pomo-toggle" data-pomo-action="toggle"><svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"/></svg><svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg><span class="pomo-toggle-text"></span></button>
+      </div>
+      <button type="button" class="link-btn" data-focus="exit" data-i18n="focus.exit">Выйти из фокуса</button>
+    </div>
+    <div class="visually-hidden" data-pomo-live role="status"></div>
+  </dialog>
+
+  <!-- Режим фокуса: вместо шапки — компактный таймер и выход -->
+  <div id="focusBar" class="focus-bar no-print" hidden>
+    <div class="focus-bar-timer"><svg class="pomo-mini" viewBox="0 0 36 36" aria-hidden="true"><circle class="pomo-track" cx="18" cy="18" r="15"/><circle class="pomo-value" data-pomo-ring cx="18" cy="18" r="15" pathLength="100"/></svg><span class="focus-bar-mode" data-pomo-mode></span><span class="focus-bar-time" data-pomo-time role="timer" aria-live="off"></span></div>
+    <button type="button" class="icon-btn pomo-toggle-icon" data-pomo-action="toggle"><svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"/></svg><svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+    <button id="focusExit" type="button" class="btn-soft focus-exit" data-focus="exit" data-i18n="focus.exit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Выйти из фокуса</button>
+  </div>
 
   <!-- Вкладки: скрыты, ими управляют шапка и карточки главной (логика в tabs.js) -->
   <div class="tabs app-tabs" aria-hidden="true">
@@ -434,6 +509,22 @@
 
   <!-- История результатов -->
   <div id="historyPanel" class="panel" hidden>
+    <!-- Фокус за неделю (js/focus-stats.js) -->
+    <section id="focusStats" class="card focus-stats" aria-labelledby="focusStatsTitle">
+      <h3 id="focusStatsTitle" data-i18n="focus.stats.title">Фокус за 7 дней</h3>
+      <div class="fs-summary"><strong id="focusTotal" class="fs-total"></strong><span id="focusSessions" class="hint"></span></div>
+      <p id="focusEmpty" class="hint" data-i18n="focus.stats.empty" hidden></p>
+      <div id="focusChart" class="fs-chart" hidden></div>
+      <div id="focusStatsTip" class="fs-tip" aria-hidden="true" hidden></div>
+      <details id="focusTableBox" class="fs-table-box" hidden>
+        <summary data-i18n="focus.stats.asTable">Показать таблицей</summary>
+        <table class="fs-table">
+          <thead><tr><th scope="col" data-i18n="focus.stats.colDay">День</th><th scope="col" data-i18n="focus.stats.colMinutes">Минуты</th><th scope="col" data-i18n="focus.stats.colSessions">Сессии</th></tr></thead>
+          <tbody id="focusTable"></tbody>
+        </table>
+      </details>
+      <div id="focusStatsMessage" class="hint" role="status"></div>
+    </section>
     <div id="historyMessage" class="message"></div>
     <div id="historyList"></div>
   </div>
@@ -548,5 +639,9 @@
   <script src="js/assignments.js"></script>
   <script src="js/account.js"></script>
   <script src="js/home-ui.js"></script>
+  <!-- Таймер и фокус — после home-ui.js (focus.js использует goTo); focus-stats.js — после pomodoro.js -->
+  <script src="js/pomodoro.js"></script>
+  <script src="js/focus.js"></script>
+  <script src="js/focus-stats.js"></script>
 </body>
 </html>

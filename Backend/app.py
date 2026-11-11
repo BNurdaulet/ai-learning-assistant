@@ -25,6 +25,7 @@ from config import (
     SUPABASE_URL,
 )
 import assignments
+import focus
 import student
 from ratelimit import BodySizeLimit, RateLimiter, client_ip
 from files import extract_text
@@ -44,6 +45,7 @@ from schemas import (
     QuizRequest,
     ReviewRequest,
     SaveQuizRequest,
+    SaveFocusRequest,
     SaveResultRequest,
     SaveMessagesRequest,
     StudyRequest,
@@ -353,6 +355,19 @@ def get_document(document_id: str, user: User = Depends(current_user)):
 @app.delete("/documents/{document_id}")
 def delete_document(document_id: str, user: User = Depends(current_user)):
     return documents.delete_document(user, document_id)
+
+
+# ---------- Статистика фокуса (таймер Помодоро) ----------
+
+@app.post("/focus")
+def save_focus_session(data: SaveFocusRequest, user: User = Depends(current_user)):
+    return focus.save_session(user, data)
+
+
+@app.get("/focus/stats")
+def focus_stats(today: str = "", user: User = Depends(current_user)):
+    # today — местная дата браузера: неделя считается по дням пользователя, а не по UTC
+    return focus.weekly_stats(user, today)
 
 
 # ---------- Удаление аккаунта ----------

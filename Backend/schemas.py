@@ -116,6 +116,12 @@ class SaveResultRequest(BaseModel):
     mistakes: list[Mistake] = []
 
 
+class SaveFocusRequest(BaseModel):
+    client_id: str   # стабильный id сессии из браузера (UUID): повтор не создаёт дубль
+    day: str         # местная дата пользователя ГГГГ-ММ-ДД
+    minutes: int
+
+
 class CreateChatRequest(BaseModel):
     title: str = ""
     style: str = "tutor"

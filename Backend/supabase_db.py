@@ -18,6 +18,7 @@ SCHEMA_MISSING_CODES = {"PGRST205", "PGRST202", "42P01", "42883"}
 # Таблицы и функции из supabase/documents.sql и assignments.sql (для них своя подсказка)
 DOCUMENT_OBJECTS = {"documents", "chunks", "rpc search_chunks"}
 ASSIGNMENT_OBJECTS = {"assignments", "attempts", "rpc get_assignment_by_code", "rpc submit_attempt"}
+FOCUS_OBJECTS = {"focus_sessions"}
 
 # Ошибки, которые функции базы бросают сами (raise exception '<текст>'): текст -> (HTTP-код, код ошибки)
 RAISED = {
@@ -52,6 +53,8 @@ def _check(response, what):
             script = "documents.sql"
         elif what in ASSIGNMENT_OBJECTS:
             script = "assignments.sql"
+        elif what in FOCUS_OBJECTS:
+            script = "focus.sql"
         else:
             script = "schema.sql"
         raise DbError(503, "db_not_configured", script=script)
@@ -65,12 +68,14 @@ def _check(response, what):
     raise DbError(502, "db_error")
 
 
-def rest(method, table, token, params=None, body=None, returning=False):
+def rest(method, table, token, params=None, body=None, returning=False, prefer=None):
     """Запрос к таблице. params — фильтры PostgREST, например {"id": "eq.<uuid>"}.
-    returning=True: вернуть изменённые/созданные строки."""
+    returning=True: вернуть изменённые/созданные строки.
+    prefer — дополнительный заголовок Prefer, например "resolution=ignore-duplicates"."""
     headers = _user_headers(token)
-    if returning:
-        headers["Prefer"] = "return=representation"
+    wishes = (["return=representation"] if returning else []) + ([prefer] if prefer else [])
+    if wishes:
+        headers["Prefer"] = ",".join(wishes)
     try:
         response = http.request(
             method, f"{SUPABASE_URL}/rest/v1/{table}",
